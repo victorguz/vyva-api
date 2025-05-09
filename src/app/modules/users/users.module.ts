@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { DynamooseModule } from 'nestjs-dynamoose';
 import { UsersService } from './users.service';
-import { UsersController } from './users.controller';
 import { UserSchema } from '../../entities/user.entity';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -30,7 +29,7 @@ import { JWT_EXPIRATION } from '../../core/config/environment.config';
       },
     ]),
   ],
-  controllers: [UsersController],
+  controllers: [],
   providers: [UsersService],
   exports: [UsersService],
 })
