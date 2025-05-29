@@ -14,6 +14,16 @@ export interface User extends UserKey {
   documentType: string;
   documentNumber: string;
   phone?: string;
+  epaycoCustomerId?: string;
+  typePerson?: string;
+  gender?: string;
+  dateOfBirth?: string;
+  country?: string;
+  city?: string;
+  address?: string;
+  googleId?: string;
+  data?: any;
+  isVerified?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -67,6 +77,48 @@ export const UserSchema = new Schema(
     phone: {
       type: String,
       required: false,
+    },
+    epaycoCustomerId: {
+      type: String,
+      required: false,
+    },
+    typePerson: {
+      type: String,
+      required: false,
+      default: 'natural',
+    },
+    gender: {
+      type: String,
+      required: false,
+    },
+    dateOfBirth: {
+      type: String,
+      required: false,
+    },
+    country: {
+      type: String,
+      required: false,
+    },
+    city: {
+      type: String,
+      required: false,
+    },
+    address: {
+      type: String,
+      required: false,
+    },
+    googleId: {
+      type: String,
+      required: false,
+    },
+    data: {
+      type: Object,
+      required: false,
+    },
+    isVerified: {
+      type: Boolean,
+      required: false,
+      default: false,
     },
   },
   {

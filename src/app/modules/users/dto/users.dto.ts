@@ -77,42 +77,114 @@ export class CreateUserDto {
     required: false,
   })
   @IsString()
+  @IsOptional()
   phone?: string;
 
+  @ApiProperty({
+    description: 'Cell phone number of the user',
+    example: '+1234567890',
+    required: false,
+  })
   @IsString()
-  @ApiProperty()
-  gender?: string;
+  @IsOptional()
+  cellPhone?: string;
 
-  @IsDateString()
-  @ApiProperty({ description: '2020-07-10 15:00:00.000' })
-  dateOfBirth?: string;
-
+  @ApiProperty({
+    description: 'Address of the user',
+    example: '123 Main St',
+    required: false,
+  })
   @IsString()
-  @ApiProperty()
-  country?: string;
-
-  @IsString()
-  @ApiProperty()
-  city?: string;
-
-  @IsString()
-  @ApiProperty()
+  @IsOptional()
   address?: string;
 
+  @ApiProperty({
+    description: 'City of the user',
+    example: 'New York',
+    required: false,
+  })
   @IsString()
-  @ApiProperty()
-  personType?: string;
+  @IsOptional()
+  city?: string;
 
+  @ApiProperty({
+    description: 'Type of person (natural or legal)',
+    example: 'natural',
+    required: false,
+    default: 'natural',
+  })
+  @IsString()
+  @IsOptional()
+  typePerson?: string = 'natural';
+
+  @ApiProperty({
+    description: 'Gender of the user',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  gender?: string;
+
+  @ApiProperty({
+    description: 'Date of birth',
+    example: '2020-07-10 15:00:00.000',
+    required: false,
+  })
+  @IsDateString()
+  @IsOptional()
+  dateOfBirth?: string;
+
+  @ApiProperty({
+    description: 'Country of the user',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  country?: string;
+
+  @ApiProperty({
+    description: 'Status of the user',
+    default: true,
+    required: false,
+  })
   @IsBoolean()
-  @ApiProperty()
+  @IsOptional()
   status?: boolean = true;
 
+  @ApiProperty({
+    description: 'Role of the user',
+    enum: UserRole,
+    default: UserRole.customer,
+    required: false,
+  })
   @IsIn(Object.values(UserRole))
-  @ApiProperty({ enum: UserRole })
+  @IsOptional()
   role?: UserRole = UserRole.customer;
 
+  @ApiProperty({
+    description: 'Google ID of the user',
+    example: '123456789012345678901',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  googleId?: string;
+
+  @ApiProperty({
+    description: 'Is verified',
+    example: true,
+    required: false,
+  })
+  @IsBoolean()
+  @IsOptional()
+  isVerified?: boolean = false;
+
+  @ApiProperty({
+    description: 'Additional data',
+    required: false,
+  })
   @IsObject()
-  @ApiProperty()
+  @IsOptional()
   data?: any;
 }
 
@@ -134,6 +206,15 @@ export class UpdateUserDto {
   @IsString()
   @IsOptional()
   lastName?: string;
+
+  @ApiProperty({
+    description: 'Email of the user',
+    example: 'john.doe@example.com',
+    required: false,
+  })
+  @IsEmail()
+  @IsOptional()
+  email?: string;
 
   @ApiProperty({
     description: 'Password of the user',
@@ -171,6 +252,42 @@ export class UpdateUserDto {
   @IsOptional()
   phone?: string;
 
+  @ApiProperty({
+    description: 'City of the user',
+    example: 'New York',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  city?: string;
+
+  @ApiProperty({
+    description: 'Address of the user',
+    example: '123 Main St',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  address?: string;
+
+  @ApiProperty({
+    description: 'Country of the user',
+    example: 'USA',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  country?: string;
+
+  @ApiProperty({
+    description: 'Type of person (natural or legal)',
+    example: 'natural',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  typePerson?: string;
+
   @ApiProperty({ required: false })
   @IsOptional()
   @IsBoolean()
@@ -180,6 +297,15 @@ export class UpdateUserDto {
   @IsOptional()
   @ApiProperty({ enum: UserRole })
   role?: UserRole;
+
+  @ApiProperty({
+    description: 'Epayco customer ID of the user',
+    example: '1234567890',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  epaycoCustomerId?: string;
 }
 
 export class FindOneUserDto {
@@ -269,6 +395,13 @@ export class UserResponseDto implements User {
   phone?: string;
   role: string;
   status: boolean;
+  typePerson?: string;
+  gender?: string;
+  dateOfBirth?: string;
+  country?: string;
+  city?: string;
+  epaycoCustomerId?: string;
+  data?: any;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -300,4 +433,40 @@ export class UpdateProfileDto {
   @IsString()
   @IsOptional()
   phone?: string;
+
+  @ApiProperty({
+    description: 'Cell phone number of the user',
+    example: '+1234567890',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  cellPhone?: string;
+
+  @ApiProperty({
+    description: 'Address of the user',
+    example: '123 Main St',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  address?: string;
+
+  @ApiProperty({
+    description: 'City of the user',
+    example: 'New York',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  city?: string;
+
+  @ApiProperty({
+    description: 'Type of person (natural or legal)',
+    example: 'natural',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  typePerson?: string;
 }

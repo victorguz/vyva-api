@@ -45,6 +45,16 @@ export class AuthUser {
   agencyId?: number;
 }
 
+export class GoogleSignInDto {
+  @ApiProperty({
+    description: 'Google ID token',
+    example: 'eyJhbGciOiJSUzI1NiIsImtpZCI6IjFiZDY4NWY1ZThmN...',
+  })
+  @IsString()
+  @IsNotEmpty()
+  token: string;
+}
+
 export class AuthCreateUserDto {
   @ApiProperty({
     description: 'Name of the user',

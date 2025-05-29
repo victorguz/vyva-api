@@ -48,6 +48,26 @@ export class UsersService {
     }
   }
 
+  async findOneByEmail(email: string): Promise<GenericResponse<User>> {
+    try {
+      const users = await this.model
+        .scan()
+        .where('email')
+        .eq(email.toLowerCase())
+        .exec();
+
+      if (!users || users.length === 0) {
+        throw new Error('MS007');
+      }
+
+      const userData = users[0].toJSON() as User;
+      delete userData.password;
+      return new GenericResponse(userData);
+    } catch (error) {
+      throw handleError(error);
+    }
+  }
+
   async create(body: CreateUserDto): Promise<GenericResponse<User>> {
     try {
       // Verificar email duplicado
@@ -65,11 +85,11 @@ export class UsersService {
         // Verificar documento duplicado
         const existingDocument = await this.model
           .scan()
-        .where('documentNumber')
-        .eq(body.documentNumber)
-        .where('documentType')
-        .eq(body.documentType)
-        .exec();
+          .where('documentNumber')
+          .eq(body.documentNumber)
+          .where('documentType')
+          .eq(body.documentType)
+          .exec();
 
         if (existingDocument && existingDocument.length > 0) {
           throw new Error('MS004');
@@ -87,6 +107,7 @@ export class UsersService {
         status: true,
         documentType: body.documentType,
         documentNumber: body.documentNumber,
+        googleId: body.googleId,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
@@ -99,7 +120,10 @@ export class UsersService {
     }
   }
 
-  async update(id:string,updateUserDto: UpdateUserDto): Promise<GenericResponse<User>> {
+  async update(
+    id: string,
+    updateUserDto: UpdateUserDto,
+  ): Promise<GenericResponse<User>> {
     try {
       // Verify document is not duplicated
       if (updateUserDto.documentNumber || updateUserDto.documentType) {

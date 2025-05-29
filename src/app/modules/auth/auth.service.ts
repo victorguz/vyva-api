@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import {
   AuthCreateUserDto,
   AuthRequestDto,
+  GoogleSignInDto,
   RefreshTokenRequest,
 } from './dtos/auth.dto';
 import { JwtService } from '@nestjs/jwt';
@@ -13,15 +14,23 @@ import { UserRole } from 'src/app/core/constants/domain.constants';
 import { User, UserKey } from 'src/app/entities/user.entity';
 import { decrypt } from 'src/app/shared/shared.functions';
 import { UsersService } from '../users/users.service';
+import { OAuth2Client } from 'google-auth-library';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
+  private googleClient: OAuth2Client;
+
   constructor(
     private readonly jwtService: JwtService,
     @InjectModel('User')
     private readonly userModel: Model<User, UserKey>,
     private readonly usersService: UsersService,
-  ) {}
+    private readonly configService: ConfigService,
+  ) {
+    const clientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
+    this.googleClient = new OAuth2Client(clientId);
+  }
 
   /**
    * Los usuarios administradores nuevos solo pueden ser creados
@@ -129,6 +138,76 @@ export class AuthService {
       if (!userData.status) {
         throw new Error('MS023'); // Usuario sin acceso permitido
       }
+
+      const token = this.jwtService.sign({
+        sub: userData.id,
+        email: userData.email,
+        role: userData.role,
+      });
+
+      return new GenericResponse<AuthResponse>({
+        token,
+        user: userWithoutPassword as UserResponse,
+      });
+    } catch (error) {
+      throw handleError(error);
+    }
+  }
+
+  async googleSignIn(
+    body: GoogleSignInDto,
+  ): Promise<GenericResponse<AuthResponse>> {
+    try {
+      // Verify the Google ID token
+      const ticket = await this.googleClient.verifyIdToken({
+        idToken: body.token,
+        audience: this.configService.get<string>('GOOGLE_CLIENT_ID'),
+      });
+
+      const payload = ticket.getPayload();
+      if (!payload) {
+        throw new Error('MS016'); // Invalid token
+      }
+
+      const { email, name, given_name, family_name } = payload;
+
+      // Check if user already exists
+      const existingUser = await this.userModel
+        .scan()
+        .where('email')
+        .eq(email.toLowerCase())
+        .exec();
+
+      let userData;
+
+      if (!existingUser || existingUser.length === 0) {
+        // Create new user
+        const createUserResponse = await this.usersService.create({
+          firstName: given_name || name?.split(' ')[0] || '',
+          lastName: family_name || name?.split(' ').slice(1).join(' ') || '',
+          email: email.toLowerCase(),
+          // Generate a random password that won't be used for login
+          password: Math.random().toString(36).substring(2, 15),
+          role: UserRole.customer,
+          status: true,
+          googleId: payload.sub,
+          isVerified: true,
+        });
+
+        userData = createUserResponse.data;
+      } else {
+        userData = existingUser[0].toJSON();
+
+        // Update Google ID if not already set
+        if (!userData.googleId) {
+          await this.userModel.update(
+            { id: userData.id },
+            { googleId: payload.sub, isVerified: true },
+          );
+        }
+      }
+
+      const { password, ...userWithoutPassword } = userData;
 
       const token = this.jwtService.sign({
         sub: userData.id,
