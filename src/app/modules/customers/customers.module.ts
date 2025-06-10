@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
+import { CustomersService } from './customers.service';
+import { CustomersController } from './customers.controller';
 import { DynamooseModule } from 'nestjs-dynamoose';
-import { UsersService } from './users.service';
-import { UsersController } from './users.controller';
+import { CustomerSchema } from '../../entities/customer-relationship.entity';
 import { UserSchema } from '../../entities/user.entity';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -22,6 +23,13 @@ import { JWT_EXPIRATION } from '../../core/config/environment.config';
     }),
     DynamooseModule.forFeature([
       {
+        name: 'Customer',
+        schema: CustomerSchema,
+        options: {
+          tableName: 'customers',
+        },
+      },
+      {
         name: 'User',
         schema: UserSchema,
         options: {
@@ -30,8 +38,8 @@ import { JWT_EXPIRATION } from '../../core/config/environment.config';
       },
     ]),
   ],
-  controllers: [UsersController],
-  providers: [UsersService],
-  exports: [UsersService],
+  controllers: [CustomersController],
+  providers: [CustomersService],
+  exports: [CustomersService],
 })
-export class UsersModule {}
+export class CustomersModule {}

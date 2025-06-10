@@ -108,6 +108,8 @@ export class UsersService {
         documentType: body.documentType,
         documentNumber: body.documentNumber,
         googleId: body.googleId,
+        profilePicture: body.profilePicture,
+        isVerified: body.isVerified,
         createdAt: new Date(),
         updatedAt: new Date(),
       });

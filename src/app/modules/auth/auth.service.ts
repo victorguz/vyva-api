@@ -169,7 +169,7 @@ export class AuthService {
         throw new Error('MS016'); // Invalid token
       }
 
-      const { email, name, given_name, family_name } = payload;
+      const { email, name, given_name, family_name, picture } = payload;
 
       // Check if user already exists
       const existingUser = await this.userModel
@@ -191,6 +191,7 @@ export class AuthService {
           role: UserRole.customer,
           status: true,
           googleId: payload.sub,
+          profilePicture: picture,
           isVerified: true,
         });
 
@@ -198,11 +199,15 @@ export class AuthService {
       } else {
         userData = existingUser[0].toJSON();
 
-        // Update Google ID if not already set
-        if (!userData.googleId) {
+        // Update Google ID and profile picture if not already set
+        if (!userData.googleId || !userData.profilePicture) {
           await this.userModel.update(
             { id: userData.id },
-            { googleId: payload.sub, isVerified: true },
+            {
+              googleId: payload.sub,
+              isVerified: true,
+              profilePicture: picture || userData.profilePicture,
+            },
           );
         }
       }

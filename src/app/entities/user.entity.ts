@@ -4,6 +4,20 @@ export interface UserKey {
   id: string;
 }
 
+export interface BusinessInfo {
+  name?: string;
+  taxId?: string;
+  industry?: string;
+  address?: string;
+  phone?: string;
+  email?: string;
+  website?: string;
+  size?: number;
+  position?: string;
+  logo?: string;
+  slug?: string;
+}
+
 export interface User extends UserKey {
   firstName: string;
   lastName: string;
@@ -22,6 +36,8 @@ export interface User extends UserKey {
   city?: string;
   address?: string;
   googleId?: string;
+  profilePicture?: string;
+  businessInfo?: BusinessInfo;
   data?: any;
   isVerified?: boolean;
   createdAt: Date;
@@ -109,6 +125,60 @@ export const UserSchema = new Schema(
     },
     googleId: {
       type: String,
+      required: false,
+    },
+    profilePicture: {
+      type: String,
+      required: false,
+    },
+    businessInfo: {
+      type: Object,
+      schema: {
+        name: {
+          type: String,
+          required: false,
+        },
+        taxId: {
+          type: String,
+          required: false,
+        },
+        industry: {
+          type: String,
+          required: false,
+        },
+        address: {
+          type: String,
+          required: false,
+        },
+        phone: {
+          type: String,
+          required: false,
+        },
+        email: {
+          type: String,
+          required: false,
+        },
+        website: {
+          type: String,
+          required: false,
+        },
+        size: {
+          type: Number,
+          required: false,
+        },
+        position: {
+          type: String,
+          required: false,
+        },
+        logo: {
+          type: String,
+          required: false,
+        },
+        slug: {
+          type: String,
+          required: false,
+        },
+      },
       required: false,
     },
     data: {

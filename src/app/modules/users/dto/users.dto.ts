@@ -12,6 +12,8 @@ import {
   MaxLength,
   IsIn,
   IsObject,
+  ValidateNested,
+  IsNumber,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import {
@@ -20,7 +22,109 @@ import {
   maxNameLength,
 } from '../../../core/constants/generic.constants';
 import { UserRole } from 'src/app/core/constants/domain.constants';
-import { User } from '../../../entities/user.entity';
+import { BusinessInfo, User } from '../../../entities/user.entity';
+import { Type } from 'class-transformer';
+
+export class BusinessInfoDto implements BusinessInfo {
+  @ApiProperty({
+    description: 'Business name',
+    example: 'Acme Corporation',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  name?: string;
+
+  @ApiProperty({
+    description: 'Business tax ID / registration number',
+    example: 'B12345678',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  taxId?: string;
+
+  @ApiProperty({
+    description: 'Business industry/sector',
+    example: 'Technology',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  industry?: string;
+
+  @ApiProperty({
+    description: 'Business address',
+    example: '123 Business Avenue, Suite 500',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  address?: string;
+
+  @ApiProperty({
+    description: 'Business phone number',
+    example: '+1234567890',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  phone?: string;
+
+  @ApiProperty({
+    description: 'Business email',
+    example: 'contact@acmecorp.com',
+    required: false,
+  })
+  @IsEmail()
+  @IsOptional()
+  email?: string;
+
+  @ApiProperty({
+    description: 'Business website',
+    example: 'https://www.acmecorp.com',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  website?: string;
+
+  @ApiProperty({
+    description: 'Business size (number of employees)',
+    example: 50,
+    required: false,
+  })
+  @IsNumber()
+  @IsOptional()
+  size?: number;
+
+  @ApiProperty({
+    description: 'Position/role in the business',
+    example: 'CEO',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  position?: string;
+
+  @ApiProperty({
+    description: 'Business logo URL',
+    example: 'https://www.acmecorp.com/logo.png',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  logo?: string;
+
+  @ApiProperty({
+    description: 'Business slug (URL-friendly identifier)',
+    example: 'acme-corporation',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  slug?: string;
+}
 
 export class CreateUserDto {
   @ApiProperty({
@@ -180,6 +284,26 @@ export class CreateUserDto {
   isVerified?: boolean = false;
 
   @ApiProperty({
+    description: 'Profile picture URL of the user',
+    example: 'https://lh3.googleusercontent.com/a/profile-picture-url',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  profilePicture?: string;
+
+  @ApiProperty({
+    description: 'Business information',
+    required: false,
+    type: BusinessInfoDto,
+  })
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => BusinessInfoDto)
+  businessInfo?: BusinessInfoDto;
+
+  @ApiProperty({
     description: 'Additional data',
     required: false,
   })
@@ -306,6 +430,35 @@ export class UpdateUserDto {
   @IsString()
   @IsOptional()
   epaycoCustomerId?: string;
+
+  @ApiProperty({
+    description: 'Profile picture URL of the user',
+    example: 'https://lh3.googleusercontent.com/a/profile-picture-url',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  profilePicture?: string;
+
+  @ApiProperty({
+    description: 'Google ID of the user',
+    example: '123456789012345678901',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  googleId?: string;
+
+  @ApiProperty({
+    description: 'Business information',
+    required: false,
+    type: BusinessInfoDto,
+  })
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => BusinessInfoDto)
+  businessInfo?: BusinessInfoDto;
 }
 
 export class FindOneUserDto {
@@ -400,8 +553,13 @@ export class UserResponseDto implements User {
   dateOfBirth?: string;
   country?: string;
   city?: string;
+  address?: string;
+  googleId?: string;
+  profilePicture?: string;
+  businessInfo?: BusinessInfo;
   epaycoCustomerId?: string;
   data?: any;
+  isVerified?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -469,4 +627,15 @@ export class UpdateProfileDto {
   @IsString()
   @IsOptional()
   typePerson?: string;
+
+  @ApiProperty({
+    description: 'Business information',
+    required: false,
+    type: BusinessInfoDto,
+  })
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => BusinessInfoDto)
+  businessInfo?: BusinessInfoDto;
 }

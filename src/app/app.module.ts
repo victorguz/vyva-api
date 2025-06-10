@@ -5,6 +5,7 @@ import { UsersModule } from './modules/users/users.module';
 import { dynamooseConfig } from './core/config/dynamoose.config';
 import { configModuleOptions } from './core/config/environment.config';
 import { AuthModule } from './modules/auth/auth.module';
+import { CustomersModule } from './modules/customers/customers.module';
 
 @Module({
   imports: [
@@ -16,7 +17,8 @@ import { AuthModule } from './modules/auth/auth.module';
       inject: [ConfigService],
     }),
     UsersModule,
-    AuthModule
+    AuthModule,
+    CustomersModule,
   ],
 })
 export class AppModule {}

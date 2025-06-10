@@ -10,4 +10,4 @@ export interface UserResponse extends Omit<User, 'password'> {}
 export interface AuthResponse {
   token: string;
   user: UserResponse;
-}
+} 
