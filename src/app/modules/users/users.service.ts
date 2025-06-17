@@ -193,6 +193,7 @@ export class UsersService {
 
       return new GenericResponse<User>(updatedUser);
     } catch (error) {
+      console.log(error);
       throw handleError(error);
     }
   }

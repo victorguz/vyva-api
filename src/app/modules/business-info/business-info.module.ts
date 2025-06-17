@@ -1,16 +1,14 @@
 import { Module } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { AuthController } from './auth.controller';
-import { JwtModule } from '@nestjs/jwt';
 import { DynamooseModule } from 'nestjs-dynamoose';
-import { SharedModule } from 'src/app/shared/shared.module';
-import { JWT_EXPIRATION } from 'src/app/core/config/environment.config';
-import { UserSchema } from 'src/app/entities/user.entity';
+import { BusinessInfoService } from './business-info.service';
+import { BusinessInfoController } from './business-info.controller';
+import { BusinessInfoSchema } from '../../entities/business-info.entity';
+import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { JWT_EXPIRATION } from '../../core/config/environment.config';
 
 @Module({
   imports: [
-    SharedModule,
     ConfigModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -24,16 +22,16 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     }),
     DynamooseModule.forFeature([
       {
-        name: 'User',
-        schema: UserSchema,
+        name: 'BusinessInfo',
+        schema: BusinessInfoSchema,
         options: {
-          tableName: 'users',
+          tableName: 'business_info',
         },
       },
     ]),
   ],
-  controllers: [AuthController],
-  providers: [AuthService],
-  exports: [AuthService],
+  controllers: [BusinessInfoController],
+  providers: [BusinessInfoService],
+  exports: [BusinessInfoService],
 })
-export class AuthModule {}
+export class BusinessInfoModule {}

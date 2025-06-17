@@ -9,10 +9,10 @@ import {
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateCustomerDto {
-  @ApiProperty({ description: 'Company user ID' })
+  @ApiProperty({ description: 'Business Info ID' })
   @IsUUID()
   @IsNotEmpty()
-  companyUserId: string;
+  businessInfoId: string;
 
   @ApiProperty({ description: 'Customer user ID' })
   @IsUUID()

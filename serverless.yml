@@ -1,4 +1,4 @@
-service: vyba-auth
+service: vyva-auth
 frameworkVersion: '3'
 useDotenv: true
 
@@ -12,7 +12,7 @@ provider:
   apiGateway:
     shouldStartNameWithService: true
   deploymentBucket:
-    name: vyba-auth-deployment-bucket
+    name: vyva-auth-deployment-bucket
   iam:
     role:
       statements:
@@ -55,7 +55,7 @@ functions:
           path: /{proxy+}
           method: ANY
     layers:
-      - arn:aws:lambda:us-east-1:754881596744:layer:vyva-users:2
+      - arn:aws:lambda:us-east-1:754881596744:layer:vyva-auth:1
     environment:
       NODE_ENV: ${self:provider.stage}
       PORT: 3000

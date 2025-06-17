@@ -11,13 +11,12 @@ import {
   ExpressAdapter,
   NestExpressApplication,
 } from '@nestjs/platform-express';
-import { Environment } from './app/core/config/environment.config';
 import { AppModule } from './app/app.module';
 import 'reflect-metadata';
 
 const cors = {
   origin: getOrigin(),
-  methods: 'POST,OPTIONS',
+  methods: 'POST,OPTIONS,GET,PUT,PATCH,DELETE',
   allowedHeaders:
     'Content-Type, Accept, Authorization, X-Requested-With, Application, Origin, Access-Control-Allow-Origin, Access-Control-Allow-Credentials',
 };

@@ -4,9 +4,11 @@ import { CustomersController } from './customers.controller';
 import { DynamooseModule } from 'nestjs-dynamoose';
 import { CustomerSchema } from '../../entities/customer-relationship.entity';
 import { UserSchema } from '../../entities/user.entity';
+import { BusinessInfoSchema } from '../../entities/business-info.entity';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JWT_EXPIRATION } from '../../core/config/environment.config';
+import { BusinessInfoModule } from '../business-info/business-info.module';
 
 @Module({
   imports: [
@@ -36,7 +38,15 @@ import { JWT_EXPIRATION } from '../../core/config/environment.config';
           tableName: 'users',
         },
       },
+      {
+        name: 'BusinessInfo',
+        schema: BusinessInfoSchema,
+        options: {
+          tableName: 'business_info',
+        },
+      },
     ]),
+    BusinessInfoModule,
   ],
   controllers: [CustomersController],
   providers: [CustomersService],

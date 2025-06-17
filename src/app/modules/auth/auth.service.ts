@@ -12,10 +12,10 @@ import { AuthResponse, UserResponse } from './interfaces/auth.interfaces';
 import { InjectModel, Model } from 'nestjs-dynamoose';
 import { UserRole } from 'src/app/core/constants/domain.constants';
 import { User, UserKey } from 'src/app/entities/user.entity';
-import { decrypt } from 'src/app/shared/shared.functions';
-import { UsersService } from '../users/users.service';
+import { decrypt, encrypt } from 'src/app/shared/shared.functions';
 import { OAuth2Client } from 'google-auth-library';
 import { ConfigService } from '@nestjs/config';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class AuthService {
@@ -25,7 +25,6 @@ export class AuthService {
     private readonly jwtService: JwtService,
     @InjectModel('User')
     private readonly userModel: Model<User, UserKey>,
-    private readonly usersService: UsersService,
     private readonly configService: ConfigService,
   ) {
     const clientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
@@ -47,16 +46,20 @@ export class AuthService {
       const [firstName, ...lastNameParts] = body.name.split(' ');
       const lastName = lastNameParts.join(' ');
 
-      const createUserResponse = await this.usersService.create({
+      const now = new Date();
+      const user = await this.userModel.create({
+        id: uuidv4(),
         firstName,
         lastName,
-        email: body.email,
-        password: body.password,
+        email: body.email.toLowerCase(),
+        password: encrypt(body.password),
         role: UserRole.customer,
         status: true,
+        createdAt: now,
+        updatedAt: now,
       });
 
-      const userData = createUserResponse.data;
+      const userData = user.toJSON();
       const { password, ...userWithoutPassword } = userData;
 
       const token = this.jwtService.sign({
@@ -182,33 +185,35 @@ export class AuthService {
 
       if (!existingUser || existingUser.length === 0) {
         // Create new user
-        const createUserResponse = await this.usersService.create({
+        const now = new Date();
+        const user = await this.userModel.create({
+          id: uuidv4(),
           firstName: given_name || name?.split(' ')[0] || '',
           lastName: family_name || name?.split(' ').slice(1).join(' ') || '',
           email: email.toLowerCase(),
           // Generate a random password that won't be used for login
-          password: Math.random().toString(36).substring(2, 15),
+          password: encrypt(Math.random().toString(36).substring(2, 15)),
           role: UserRole.customer,
           status: true,
           googleId: payload.sub,
           profilePicture: picture,
           isVerified: true,
+          createdAt: now,
+          updatedAt: now,
         });
 
-        userData = createUserResponse.data;
+        userData = user.toJSON();
       } else {
         userData = existingUser[0].toJSON();
 
         // Update Google ID and profile picture if not already set
         if (!userData.googleId || !userData.profilePicture) {
-          await this.userModel.update(
-            { id: userData.id },
-            {
-              googleId: payload.sub,
-              isVerified: true,
-              profilePicture: picture || userData.profilePicture,
-            },
-          );
+          await this.userModel.update({ id: userData.id } as UserKey, {
+            googleId: payload.sub,
+            isVerified: true,
+            profilePicture: picture || userData.profilePicture,
+            updatedAt: new Date(),
+          });
         }
       }
 

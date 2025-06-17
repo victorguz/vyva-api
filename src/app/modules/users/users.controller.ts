@@ -23,7 +23,7 @@ import { AuthUser } from '../auth/dtos/auth.dto';
 
 @ApiTags('Users')
 @Controller('users')
-// @UseGuards(AuthGuard)
+@UseGuards(AuthGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
@@ -94,6 +94,7 @@ export class UsersController {
     @CurrentUser() user: AuthUser,
     @Body() updateProfileDto: UpdateProfileDto,
   ): Promise<GenericResponse<User>> {
+    console.log(user);
     return this.usersService.updateProfile(user, updateProfileDto);
   }
 }

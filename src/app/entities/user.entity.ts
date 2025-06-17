@@ -4,20 +4,6 @@ export interface UserKey {
   id: string;
 }
 
-export interface BusinessInfo {
-  name?: string;
-  taxId?: string;
-  industry?: string;
-  address?: string;
-  phone?: string;
-  email?: string;
-  website?: string;
-  size?: number;
-  position?: string;
-  logo?: string;
-  slug?: string;
-}
-
 export interface User extends UserKey {
   firstName: string;
   lastName: string;
@@ -25,8 +11,8 @@ export interface User extends UserKey {
   password: string;
   role: string;
   status: boolean;
-  documentType: string;
-  documentNumber: string;
+  documentType?: string;
+  documentNumber?: string;
   phone?: string;
   epaycoCustomerId?: string;
   typePerson?: string;
@@ -37,7 +23,7 @@ export interface User extends UserKey {
   address?: string;
   googleId?: string;
   profilePicture?: string;
-  businessInfo?: BusinessInfo;
+  businessInfoId?: string;
   data?: any;
   isVerified?: boolean;
   createdAt: Date;
@@ -81,14 +67,12 @@ export const UserSchema = new Schema(
     documentType: {
       type: String,
       required: false,
+      default: '',
     },
     documentNumber: {
       type: String,
       required: false,
-      index: {
-        type: 'global',
-        name: 'documentNumber-index',
-      },
+      default: '',
     },
     phone: {
       type: String,
@@ -131,54 +115,8 @@ export const UserSchema = new Schema(
       type: String,
       required: false,
     },
-    businessInfo: {
-      type: Object,
-      schema: {
-        name: {
-          type: String,
-          required: false,
-        },
-        taxId: {
-          type: String,
-          required: false,
-        },
-        industry: {
-          type: String,
-          required: false,
-        },
-        address: {
-          type: String,
-          required: false,
-        },
-        phone: {
-          type: String,
-          required: false,
-        },
-        email: {
-          type: String,
-          required: false,
-        },
-        website: {
-          type: String,
-          required: false,
-        },
-        size: {
-          type: Number,
-          required: false,
-        },
-        position: {
-          type: String,
-          required: false,
-        },
-        logo: {
-          type: String,
-          required: false,
-        },
-        slug: {
-          type: String,
-          required: false,
-        },
-      },
+    businessInfoId: {
+      type: String,
       required: false,
     },
     data: {

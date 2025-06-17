@@ -5,7 +5,7 @@ export interface CustomerKey {
 }
 
 export interface Customer extends CustomerKey {
-  companyUserId: string;
+  businessInfoId: string;
   customerUserId: string;
   status: boolean;
   notes?: string;
@@ -27,12 +27,12 @@ export const CustomerSchema = new Schema(
       hashKey: true,
       required: true,
     },
-    companyUserId: {
+    businessInfoId: {
       type: String,
       required: true,
       index: {
         type: 'global',
-        name: 'companyUserId-index',
+        name: 'businessInfoId-index',
       },
     },
     customerUserId: {

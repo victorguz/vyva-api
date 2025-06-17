@@ -5,6 +5,10 @@ import {
   CustomerKey,
 } from '../../entities/customer-relationship.entity';
 import { User, UserKey } from '../../entities/user.entity';
+import {
+  BusinessInfo,
+  BusinessInfoKey,
+} from '../../entities/business-info.entity';
 
 import { handleError } from '../../shared/error.functions';
 import { v4 as uuidv4 } from 'uuid';
@@ -18,31 +22,33 @@ export class CustomersService {
     private readonly customerModel: Model<Customer, CustomerKey>,
     @InjectModel('User')
     private readonly userModel: Model<User, UserKey>,
+    @InjectModel('BusinessInfo')
+    private readonly businessInfoModel: Model<BusinessInfo, BusinessInfoKey>,
   ) {}
 
   async findByBusinessSlug(
     businessSlug: string,
   ): Promise<GenericResponse<CustomerWithUserDto[]>> {
     try {
-      // Find the company user with the given business slug
-      const companyUsers = await this.userModel
+      // Find the business info with the given slug
+      const businessInfos = await this.businessInfoModel
         .scan()
-        .filter('businessInfo.slug')
+        .filter('slug')
         .eq(businessSlug)
         .exec();
 
-      if (!companyUsers || companyUsers.length === 0) {
-        // No company found with that slug
+      if (!businessInfos || businessInfos.length === 0) {
+        // No business found with that slug
         return new GenericResponse([]);
       }
 
-      const companyUserId = companyUsers[0].id;
+      const businessInfo = businessInfos[0];
 
-      // Find all customer records for this company
+      // Find all customer records for this business
       const customerRecords = await this.customerModel
         .scan()
-        .where('companyUserId')
-        .eq(companyUserId)
+        .where('businessInfoId')
+        .eq(businessInfo.id)
         .where('status')
         .eq(true)
         .exec();
@@ -84,10 +90,12 @@ export class CustomersService {
 
   async create(dto: CreateCustomerDto): Promise<GenericResponse<Customer>> {
     try {
-      // Verify company user exists
-      const companyUser = await this.userModel.get({ id: dto.companyUserId });
-      if (!companyUser) {
-        throw new Error('MS007'); // Company user not found
+      // Verify business info exists
+      const businessInfo = await this.businessInfoModel.get({
+        id: dto.businessInfoId,
+      });
+      if (!businessInfo) {
+        throw new Error('MS007'); // Business info not found
       }
 
       // Verify customer user exists
@@ -99,8 +107,8 @@ export class CustomersService {
       // Check if customer already exists
       const existingCustomer = await this.customerModel
         .scan()
-        .where('companyUserId')
-        .eq(dto.companyUserId)
+        .where('businessInfoId')
+        .eq(dto.businessInfoId)
         .where('customerUserId')
         .eq(dto.customerUserId)
         .exec();
@@ -112,7 +120,7 @@ export class CustomersService {
       // Create the customer record with contact info
       const newCustomer = await this.customerModel.create({
         id: uuidv4(),
-        companyUserId: dto.companyUserId,
+        businessInfoId: dto.businessInfoId,
         customerUserId: dto.customerUserId,
         // Contact information
         fullName: dto.fullName,
