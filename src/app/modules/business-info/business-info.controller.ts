@@ -15,13 +15,13 @@ import {
   FindBusinessInfoDto,
 } from './dto/business-info.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { AuthUser } from '../auth/dtos/auth.dto';
+import { AuthGuard } from '../auth/guards/auth.guard';
 
 @ApiTags('business-info')
 @Controller('business-info')
-@UseGuards(JwtAuthGuard)
+@UseGuards(AuthGuard)
 @ApiBearerAuth()
 export class BusinessInfoController {
   constructor(private readonly businessInfoService: BusinessInfoService) {}

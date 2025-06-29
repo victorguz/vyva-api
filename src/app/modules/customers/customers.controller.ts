@@ -16,14 +16,14 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { GenericResponse } from '../../core/interfaces/generic-response.interface';
 import { Customer } from '../../entities/customer-relationship.entity';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { AuthUser } from '../auth/dtos/auth.dto';
 import { BusinessInfoService } from '../business-info/business-info.service';
+import { AuthGuard } from '../auth/guards/auth.guard';
 
 @ApiTags('customers')
 @Controller('customers')
-@UseGuards(JwtAuthGuard)
+@UseGuards(AuthGuard)
 @ApiBearerAuth()
 export class CustomersController {
   constructor(

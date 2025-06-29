@@ -3,10 +3,17 @@ import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import { AuthUser } from '../dtos/auth.dto';
 import { handleError } from 'src/app/shared/error.functions';
+import { InjectModel } from 'nestjs-dynamoose';
+import { Model } from 'nestjs-dynamoose';
+import { User, UserKey } from 'src/app/entities/user.entity';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private jwtService: JwtService) {}
+  constructor(
+    private jwtService: JwtService,
+    @InjectModel('User')
+    private readonly model: Model<User, UserKey>,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
@@ -18,9 +25,13 @@ export class AuthGuard implements CanActivate {
       const payload: AuthUser = await this.jwtService.verifyAsync(token, {
         secret: process.env.JWT_SECRET,
       });
-      // 💡 We're assigning the payload to the request object here
-      // so that we can access it in our route handlers
-      request['user'] = payload;
+      const user = await this.model.get({ id: payload.sub });
+      if (!user) {
+        throw handleError('MS019');
+      }
+      const userData = user.toJSON() as User;
+      userData.password = undefined;
+      request['user'] = userData;
     } catch {
       throw handleError('MS019');
     }
