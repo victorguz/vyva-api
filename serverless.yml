@@ -46,7 +46,7 @@ custom:
     prd: ${ssm:LAMBDA_MEMORYSIZE_${upper(${self:provider.stage})}}
 functions:
   api:
-    handler: dist/src/lambda.handler
+    handler: dist/lambda.handler
     events:
       - http:
           path: /
