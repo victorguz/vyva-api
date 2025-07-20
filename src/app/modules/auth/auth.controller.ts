@@ -22,12 +22,6 @@ export class AuthController {
     return this.authService.createUser(body);
   }
 
-  @Post('public/signup2')
-  @ApiOperation({ summary: 'Sign up a new user' })
-  async signup2(@Body() body: AuthCreateUserDto) {
-    return this.authService.createUser(body);
-  }
-
   @Post('public/login')
   @ApiOperation({ summary: 'Login with email and password' })
   async login(@Body() body: AuthRequestDto) {
