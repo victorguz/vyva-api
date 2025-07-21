@@ -1,0 +1,87 @@
+service: vyva-auth
+frameworkVersion: '3'
+useDotenv: true
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  memorySize: ${self:custom.MEMORYSIZE.${self:provider.stage}}
+  timeout: 30
+  stage: ${opt:stage,'dev'}
+  region: us-east-1
+  apiGateway:
+    shouldStartNameWithService: true
+  deploymentBucket:
+    name: vyva-auth-deployment-bucket
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:CreateTable
+            - dynamodb:DescribeTable
+            - dynamodb:PutItem
+            - dynamodb:GetItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+            - dynamodb:Query
+            - dynamodb:Scan
+          Resource:
+            - arn:aws:dynamodb:${self:provider.region}:754881596744:table/${self:provider.stage}-vyva-*
+            - arn:aws:dynamodb:${self:provider.region}:754881596744:table/${self:provider.stage}-vyva-*/index/*
+
+package:
+  excludeDevDependencies: true
+  patterns:
+    - '!**'
+    - 'dist/**'
+custom:
+  stages:
+    - dev
+    - qas
+    - prd
+  MEMORYSIZE:
+    dev: ${ssm:LAMBDA_MEMORYSIZE_${upper(${self:provider.stage})}}
+    qas: ${ssm:LAMBDA_MEMORYSIZE_${upper(${self:provider.stage})}}
+    prd: ${ssm:LAMBDA_MEMORYSIZE_${upper(${self:provider.stage})}}
+functions:
+  api:
+    handler: dist/lambda.handler
+    events:
+      - http:
+          path: /
+          method: ANY
+      - http:
+          path: /{proxy+}
+          method: ANY
+    layers:
+      - arn:aws:lambda:us-east-1:754881596744:layer:vyva-auth:1
+    environment:
+      NODE_ENV: ${self:provider.stage}
+      PORT: 3000
+      ERROR_LOGS: true
+
+      DB_DIALECT: ${ssm:DB_DIALECT}
+      DB_USER: ${ssm:DB_USER_${upper(${self:provider.stage})}}
+      DB_PASSWORD: ${ssm:DB_PASSWORD_${upper(${self:provider.stage})}}
+      DB_NAME: ${ssm:DB_NAME_${upper(${self:provider.stage})}}
+      DB_HOST: ${ssm:DB_HOST_${upper(${self:provider.stage})}}
+      DB_PORT: ${ssm:DB_PORT_${upper(${self:provider.stage})}}
+      JWT_SECRET: ${ssm:JWT_SECRET_${upper(${self:provider.stage})}}
+      SECRET_KEY: ${ssm:SECRET_KEY_${upper(${self:provider.stage})}}
+      ADMIN_PHONE: ${ssm:ADMIN_PHONE}
+      ADMIN_EMAIL: ${ssm:ADMIN_EMAIL}
+      IAM_SMTP: ${ssm:IAM_SMTP}
+      SMTP_HOST: ${ssm:SMTP_HOST}
+      SMTP_USER: ${ssm:SMTP_USER}
+      SMTP_PASSWORD: ${ssm:SMTP_PASSWORD}
+      EMAIL_SENDER: ${ssm:EMAIL_SENDER}
+      ACCESS_KEY_ID: ${ssm:ACCESS_KEY_ID}
+      SECRET_ACCESS_KEY: ${ssm:SECRET_ACCESS_KEY}
+      REGION: ${ssm:REGION}
+      GOOGLE_CLIENT_ID: ${ssm:GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${ssm:GOOGLE_CLIENT_SECRET}
+plugins:
+  - serverless-deployment-bucket
+  - serverless-stage-manager
+  - serverless-plugin-utils
