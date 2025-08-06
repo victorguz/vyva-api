@@ -3,7 +3,6 @@ import { AuthService } from './auth.service';
 import {
   AuthCreateUserDto,
   AuthRequestDto,
-  AuthUser,
   GoogleSignInDto,
   RefreshTokenRequest,
 } from './dtos/auth.dto';
@@ -45,7 +44,6 @@ export class AuthController {
   @ApiOperation({ summary: 'Refresh access token' })
   async refreshToken(
     @Body() body: RefreshTokenRequest,
-    @CurrentUser() user: AuthUser,
   ) {
     return this.authService.refreshToken(body);
   }

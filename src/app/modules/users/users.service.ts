@@ -1,16 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel, Model } from 'nestjs-dynamoose';
 import { User, UserKey } from '../../entities/user.entity';
-import {
-  CreateUserDto,
-  UpdateUserDto,
-  UpdateProfileDto,
-} from './dto/users.dto';
+import { CreateUserDto, UpdateUserDto } from './dto/users.dto';
 import { handleError } from '../../shared/error.functions';
 import { v4 as uuidv4 } from 'uuid';
 import { GenericResponse } from '../../core/interfaces/generic-response.interface';
 import { encrypt } from '../../shared/shared.functions';
-import { AuthUser } from '../auth/dtos/auth.dto';
 
 @Injectable()
 export class UsersService {
@@ -172,28 +167,6 @@ export class UsersService {
       await this.model.update({ id }, { status: false });
       return new GenericResponse(undefined);
     } catch (error) {
-      throw handleError(error);
-    }
-  }
-
-  async updateProfile(
-    user: AuthUser,
-    updateProfileDto: UpdateProfileDto,
-  ): Promise<GenericResponse<User>> {
-    try {
-      const userData = await this.model.get({ id: user.sub });
-      if (!userData) {
-        throw new Error('MS007');
-      }
-
-      const updatedUser = await this.model.update(
-        { id: user.sub },
-        { ...updateProfileDto },
-      );
-
-      return new GenericResponse<User>(updatedUser);
-    } catch (error) {
-      console.log(error);
       throw handleError(error);
     }
   }

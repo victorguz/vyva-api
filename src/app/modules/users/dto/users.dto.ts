@@ -308,6 +308,15 @@ export class UpdateUserDto {
   @IsString()
   @IsOptional()
   typePerson?: string;
+
+  @ApiProperty({
+    description: 'Status of the user',
+    example: true,
+    required: false,
+  })
+  @IsBoolean()
+  @IsOptional()
+  status?: boolean;
 }
 
 export class FindOneUserDto {
@@ -411,78 +420,4 @@ export class UserResponseDto implements User {
   isVerified?: boolean;
   createdAt: Date;
   updatedAt: Date;
-}
-
-export class UpdateProfileDto {
-  @ApiProperty({
-    description: 'First name of the user',
-    example: 'John',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
-  firstName?: string;
-
-  @ApiProperty({
-    description: 'Last name of the user',
-    example: 'Doe',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
-  lastName?: string;
-
-  @ApiProperty({
-    description: 'Phone number of the user',
-    example: '+1234567890',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
-  phone?: string;
-
-  @ApiProperty({
-    description: 'Cell phone number of the user',
-    example: '+1234567890',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
-  cellPhone?: string;
-
-  @ApiProperty({
-    description: 'Address of the user',
-    example: '123 Main St',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
-  address?: string;
-
-  @ApiProperty({
-    description: 'City of the user',
-    example: 'New York',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
-  city?: string;
-
-  @ApiProperty({
-    description: 'Type of person (natural or legal)',
-    example: 'natural',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
-  typePerson?: string;
-
-  @ApiProperty({
-    description: 'Business Info ID',
-    example: 'b9c0e5c0-5c9b-11eb-ae93-0242ac130002',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
-  businessInfoId?: string;
 }

@@ -4,6 +4,9 @@ import { DynamooseModule } from 'nestjs-dynamoose';
 import { dynamooseConfig } from './core/config/dynamoose.config';
 import { configModuleOptions } from './core/config/environment.config';
 import { AuthModule } from './modules/auth/auth.module';
+import { UsersModule } from './modules/users/users.module';
+import { ProductsModule } from './modules/products/products.module';
+import { ProfileModule } from './modules/profile/profile.module';
 
 @Module({
   imports: [
@@ -15,6 +18,9 @@ import { AuthModule } from './modules/auth/auth.module';
       inject: [ConfigService],
     }),
     AuthModule,
+    UsersModule,
+    ProductsModule,
+    ProfileModule,
   ],
 })
 export class AppModule {}

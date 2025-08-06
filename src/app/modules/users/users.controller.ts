@@ -9,17 +9,11 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import {
-  CreateUserDto,
-  UpdateUserDto,
-  UpdateProfileDto,
-} from './dto/users.dto';
+import { CreateUserDto, UpdateUserDto } from './dto/users.dto';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { GenericResponse } from '../../core/interfaces/generic-response.interface';
 import { User } from '../../entities/user.entity';
 import { AuthGuard } from '../auth/guards/auth.guard';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { AuthUser } from '../auth/dtos/auth.dto';
 
 @ApiTags('Users')
 @Controller('users')
@@ -85,16 +79,5 @@ export class UsersController {
   })
   async remove(@Param('id') id: string): Promise<GenericResponse<void>> {
     return this.usersService.remove(id);
-  }
-
-  @Patch('profile')
-  @ApiOperation({ summary: 'Update user profile' })
-  @ApiResponse({ status: 200, description: 'Profile updated successfully' })
-  updateProfile(
-    @CurrentUser() user: AuthUser,
-    @Body() updateProfileDto: UpdateProfileDto,
-  ): Promise<GenericResponse<User>> {
-    console.log(user);
-    return this.usersService.updateProfile(user, updateProfileDto);
   }
 }

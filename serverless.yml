@@ -1,4 +1,4 @@
-service: vyva-auth
+service: vyva
 frameworkVersion: '3'
 useDotenv: true
 
@@ -12,7 +12,7 @@ provider:
   apiGateway:
     shouldStartNameWithService: true
   deploymentBucket:
-    name: vyva-auth-deployment-bucket
+    name: vyva-api-deployment-bucket
   iam:
     role:
       statements:
