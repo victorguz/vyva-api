@@ -212,7 +212,6 @@ export class AuthService {
             googleId: payload.sub,
             isVerified: true,
             profilePicture: picture || userData.profilePicture,
-            updatedAt: new Date(),
           });
         }
       }
