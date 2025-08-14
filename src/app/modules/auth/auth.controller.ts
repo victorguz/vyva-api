@@ -15,24 +15,6 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post('public/signup')
-  @ApiOperation({ summary: 'Sign up a new user' })
-  async signup(@Body() body: AuthCreateUserDto) {
-    return this.authService.createUser(body);
-  }
-
-  @Post('public/signup2')
-  @ApiOperation({ summary: 'Sign up a new user' })
-  async signup2(@Body() body: AuthCreateUserDto) {
-    return this.authService.createUser(body);
-  }
-
-  @Post('public/login')
-  @ApiOperation({ summary: 'Login with email and password' })
-  async login(@Body() body: AuthRequestDto) {
-    return this.authService.login(body);
-  }
-
   @Post('public/google')
   @ApiOperation({ summary: 'Sign in with Google' })
   async googleSignIn(@Body() body: GoogleSignInDto) {
