@@ -1,18 +1,7 @@
-import {
-  IsBoolean,
-  IsNumber,
-  IsOptional,
-  IsPositive,
-  IsString,
-  IsIn,
-  IsUUID,
-  IsNotEmpty,
-} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  MeasurementUnits,
-  ProductStatus,
-} from '../../../core/constants/domain.constants';
+import { IsBoolean, IsIn, IsNotEmpty, IsNumber, IsOptional, IsPositive, IsString, IsUUID } from 'class-validator';
+
+import { MeasurementUnits, ProductStatus } from '../../../core/constants/domain.constants';
 import { Product } from '../../../entities/product.entity';
 
 export class CreateProductDto {
@@ -403,47 +392,6 @@ export class ListProductDto {
   businessInfoId?: string;
 }
 
-export class SellProductDto {
-  @ApiProperty({
-    description: 'Product ID',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-  })
-  @IsUUID()
-  id!: string;
-
-  @ApiProperty({
-    description: 'Price ID',
-    example: 1,
-  })
-  @IsNumber()
-  @IsPositive()
-  idPrice!: number;
-
-  @ApiProperty({
-    description: 'Quantity to sell',
-    example: 2,
-  })
-  @IsNumber()
-  @IsPositive()
-  quantity!: number;
-
-  @ApiProperty({
-    description: 'Whether the product is a subscription',
-    example: true,
-  })
-  @IsBoolean()
-  isSubscription!: boolean;
-
-  @ApiProperty({
-    description: 'Whether the product requires stock management',
-    example: false,
-    required: false,
-  })
-  @IsBoolean()
-  @IsOptional()
-  requireStock?: boolean;
-}
-
 export class ProductResponseDto implements Product {
   id: string;
   name: string;
@@ -473,12 +421,6 @@ export class FindProductResponseDto extends ProductResponseDto {
     example: 2,
   })
   quantity!: number;
-
-  @ApiProperty({
-    description: 'Price ID',
-    example: 1,
-  })
-  idPrice!: number;
 
   @ApiProperty({
     description: 'Price',

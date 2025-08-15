@@ -1,21 +1,17 @@
 import { Injectable } from '@nestjs/common';
-import {
-  AuthCreateUserDto,
-  AuthRequestDto,
-  GoogleSignInDto,
-  RefreshTokenRequest,
-} from './dtos/auth.dto';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { handleError } from 'src/app/shared/error.functions';
-import { GenericResponse } from 'src/app/core/interfaces/generic-response.interface';
-import { AuthResponse, UserResponse } from './interfaces/auth.interfaces';
+import { OAuth2Client } from 'google-auth-library';
 import { InjectModel, Model } from 'nestjs-dynamoose';
 import { UserRole } from 'src/app/core/constants/domain.constants';
+import { GenericResponse } from 'src/app/core/interfaces/generic-response.interface';
 import { User, UserKey } from 'src/app/entities/user.entity';
+import { handleError } from 'src/app/shared/error.functions';
 import { decrypt, encrypt } from 'src/app/shared/shared.functions';
-import { OAuth2Client } from 'google-auth-library';
-import { ConfigService } from '@nestjs/config';
 import { v4 as uuidv4 } from 'uuid';
+
+import { GoogleSignInDto, RefreshTokenRequest } from './dtos/auth.dto';
+import { AuthResponse, UserResponse } from './interfaces/auth.interfaces';
 
 @Injectable()
 export class AuthService {
@@ -147,4 +143,6 @@ export class AuthService {
       throw handleError(error);
     }
   }
+
+  // Removed code-exchange flow; we only accept ID tokens at /public/google
 }

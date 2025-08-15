@@ -245,9 +245,6 @@ export const TRANSLATE_MESSAGES = {
       'acquisition-stopped': 'Adquisición detenida',
       'communication-failed': 'Comunicación fallida',
     },
-    PAYMENTREFERENCES: {
-      pointOfSale: 'Transacción en punto de venta',
-    },
     COMPANYTYPE: {
       gym: 'Gimnasio',
       store: 'Comercio',
@@ -337,7 +334,6 @@ export const TRANSLATE_MESSAGES = {
       time: 'Hora',
       purchasedTime: 'Hora compra',
       orderNumber: 'No. Orden',
-      paymentReference: 'Referencia',
       status: 'Estado',
       causeOfVoided: 'Anulación',
       generatedDate: 'Fecha y hora generación',

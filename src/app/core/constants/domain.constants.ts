@@ -37,8 +37,6 @@ export enum TransactionVoidCauses {
   void = 'void',
 }
 
-export const maxPaymentReference: number = 50;
-
 export enum ProductOutputReasons {
   sale = 'sale',
   institutionalUse = 'institutionalUse',

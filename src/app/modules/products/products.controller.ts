@@ -1,27 +1,13 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  UseGuards,
-  Query,
-} from '@nestjs/common';
-import { ProductsService } from './products.service';
-import {
-  CreateProductDto,
-  UpdateProductDto,
-  ListProductDto,
-  SellProductDto,
-} from './dto/products.dto';
+import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { User } from 'src/app/entities/user.entity';
+
 import { GenericResponse } from '../../core/interfaces/generic-response.interface';
 import { Product } from '../../entities/product.entity';
-import { AuthGuard } from '../auth/guards/auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { User } from 'src/app/entities/user.entity';
+import { AuthGuard } from '../auth/guards/auth.guard';
+import { CreateProductDto, UpdateProductDto } from './dto/products.dto';
+import { ProductsService } from './products.service';
 
 @ApiTags('Products')
 @Controller('products')
@@ -81,49 +67,5 @@ export class ProductsController {
     @Body() updateProductDto: UpdateProductDto,
   ): Promise<GenericResponse<Product>> {
     return this.productsService.update(id, updateProductDto);
-  }
-
-  @Patch(':id/stock')
-  @ApiOperation({ summary: 'Update product stock' })
-  @ApiResponse({
-    status: 200,
-    description: 'The product stock has been successfully updated.',
-    type: GenericResponse<Product>,
-  })
-  @UseGuards(AuthGuard)
-  async updateStock(
-    @Param('id') id: string,
-    @Body() body: { quantity: number },
-  ): Promise<GenericResponse<Product>> {
-    return this.productsService.updateStock(id, body.quantity);
-  }
-
-  @Delete(':id')
-  @ApiOperation({ summary: 'Delete a product' })
-  @ApiResponse({
-    status: 200,
-    description: 'The product has been successfully deleted.',
-    type: GenericResponse<void>,
-  })
-  @UseGuards(AuthGuard)
-  async remove(@Param('id') id: string): Promise<GenericResponse<void>> {
-    return this.productsService.remove(id);
-  }
-
-  @Post('sell')
-  @ApiOperation({ summary: 'Sell a product' })
-  @ApiResponse({
-    status: 200,
-    description: 'Product sold successfully.',
-    type: GenericResponse<Product>,
-  })
-  @UseGuards(AuthGuard)
-  async sellProduct(
-    @Body() sellProductDto: SellProductDto,
-  ): Promise<GenericResponse<Product>> {
-    // This would typically involve more complex logic for selling products
-    // For now, we'll just update the stock
-    const quantity = -sellProductDto.quantity; // Negative to reduce stock
-    return this.productsService.updateStock(sellProductDto.id, quantity);
   }
 }
