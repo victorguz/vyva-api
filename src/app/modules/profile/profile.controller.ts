@@ -3,7 +3,7 @@ import { ProfileService } from './profile.service';
 import { UpdateProfileDto } from './dto/profile.dto';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { GenericResponse } from '../../core/interfaces/generic-response.interface';
-import { User } from '../../entities/user.entity';
+import { User } from '../../schemas/user.schema';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 

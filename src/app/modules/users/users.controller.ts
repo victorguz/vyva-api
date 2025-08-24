@@ -12,7 +12,7 @@ import { UsersService } from './users.service';
 import { CreateUserDto, UpdateUserDto } from './dto/users.dto';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { GenericResponse } from '../../core/interfaces/generic-response.interface';
-import { User } from '../../entities/user.entity';
+import { User } from '../../schemas/user.schema';
 import { AuthGuard } from '../auth/guards/auth.guard';
 
 @ApiTags('Users')

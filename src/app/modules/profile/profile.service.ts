@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { User } from '../../entities/user.entity';
+import { User } from '../../schemas/user.schema';
 import { UpdateProfileDto } from './dto/profile.dto';
 import { handleError } from '../../shared/error.functions';
 import { GenericResponse } from '../../core/interfaces/generic-response.interface';

@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { DynamooseModule } from 'nestjs-dynamoose';
 import { ProductsService } from './products.service';
 import { ProductsController } from './products.controller';
-import { ProductSchema } from '../../entities/product.entity';
+import { ProductSchema } from '../../schemas/product.schema';
 import { SharedAuthModule } from '../shared/shared-auth.module';
 
 @Module({

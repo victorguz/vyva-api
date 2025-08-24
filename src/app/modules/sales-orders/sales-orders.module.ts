@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
 import { DynamooseModule } from 'nestjs-dynamoose';
 
-import { SalesOrderSchema } from '../../entities/sales-order.entity';
+import { ProductSchema } from '../../schemas/product.schema';
+import { SalesOrderSchema } from '../../schemas/sales-order.schema';
 import { SharedAuthModule } from '../shared/shared-auth.module';
 import { SalesOrdersController } from './sales-orders.controller';
 import { SalesOrdersService } from './sales-orders.service';
@@ -15,6 +16,13 @@ import { SalesOrdersService } from './sales-orders.service';
         schema: SalesOrderSchema,
         options: {
           tableName: 'sales-orders',
+        },
+      },
+      {
+        name: 'Product',
+        schema: ProductSchema,
+        options: {
+          tableName: 'products',
         },
       },
     ]),

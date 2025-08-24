@@ -23,49 +23,6 @@ export enum PaymentMethodType {
   card = 'card',
   link = 'link',
 }
-export enum PaymentMethodIcon {
-  card = 'credit_card',
-  transfer = 'sync_alt',
-  cash = 'payments',
-}
-
-export enum TransactionStates {
-  done = 'done',
-  voided = 'voided',
-}
-export enum TransactionVoidCauses {
-  void = 'void',
-}
-
-export enum ProductOutputReasons {
-  sale = 'sale',
-  institutionalUse = 'institutionalUse',
-  expiration = 'expiration',
-  gift = 'gift',
-}
-
-export enum ProductInputReasons {
-  supply = 'supply',
-  productChange = 'productChange',
-  institutionalSupplies = 'institutionalSupplies',
-  voidedSale = 'voidedSale',
-}
-
-export enum ProductMovementReasonIcon {
-  sale = 'shopping_cart',
-  supply = 'box_add',
-  productChange = 'swap_horiz',
-  institutionalUse = 'store',
-  expiration = 'date_range',
-  gift = 'featured_seasonal_and_gifts',
-  voidedSale = 'assignment_return',
-  institutionalSupplies = 'store',
-}
-
-export enum ProductMovementType {
-  input = 'input',
-  output = 'output',
-}
 
 export enum MeasurementUnits {
   und = 'und',
@@ -93,8 +50,8 @@ export enum ProductStatus {
   deleted = 'deleted',
 }
 
-export enum PaymentOrderStatusDescription {
-  pending = 'Pendiente',
-  paid = 'Pagado',
-  canceled = 'Cancelado',
+export enum SalesOrderStatus {
+  pending = 'pending',
+  paid = 'paid',
+  canceled = 'canceled',
 }

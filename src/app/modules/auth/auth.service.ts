@@ -5,7 +5,7 @@ import { OAuth2Client } from 'google-auth-library';
 import { InjectModel, Model } from 'nestjs-dynamoose';
 import { UserRole } from 'src/app/core/constants/domain.constants';
 import { GenericResponse } from 'src/app/core/interfaces/generic-response.interface';
-import { User, UserKey } from 'src/app/entities/user.entity';
+import { User, UserKey } from 'src/app/schemas/user.schema';
 import { handleError } from 'src/app/shared/error.functions';
 import { decrypt, encrypt } from 'src/app/shared/shared.functions';
 import { v4 as uuidv4 } from 'uuid';

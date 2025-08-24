@@ -1,9 +1,9 @@
 import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { User } from 'src/app/entities/user.entity';
+import { User } from 'src/app/schemas/user.schema';
 
 import { GenericResponse } from '../../core/interfaces/generic-response.interface';
-import { Product } from '../../entities/product.entity';
+import { Product } from '../../schemas/product.schema';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { CreateProductDto, UpdateProductDto } from './dto/products.dto';

@@ -1,12 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel, Model } from 'nestjs-dynamoose';
-import { Product, ProductKey } from '../../entities/product.entity';
-import { CreateProductDto, UpdateProductDto } from './dto/products.dto';
-import { handleError } from '../../shared/error.functions';
-import { v4 as uuidv4 } from 'uuid';
-import { GenericResponse } from '../../core/interfaces/generic-response.interface';
-import { ProductStatus } from '../../core/constants/domain.constants';
 import { deleteEmptyProperties } from 'src/app/shared/shared.functions';
+import { v4 as uuidv4 } from 'uuid';
+
+import { ProductStatus } from '../../core/constants/domain.constants';
+import { GenericResponse } from '../../core/interfaces/generic-response.interface';
+import { Product, ProductKey } from '../../schemas/product.schema';
+import { handleError } from '../../shared/error.functions';
+import { CreateProductDto, UpdateProductDto } from './dto/products.dto';
 
 @Injectable()
 export class ProductsService {
@@ -134,7 +135,7 @@ export class ProductsService {
 
       const updatedProduct = await this.model.update(
         { id },
-        { stock: newStock, updatedAt: new Date() },
+        { stock: newStock },
       );
 
       return new GenericResponse(updatedProduct.toJSON() as Product);

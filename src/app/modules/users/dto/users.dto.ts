@@ -20,7 +20,7 @@ import {
   maxNameLength,
 } from '../../../core/constants/generic.constants';
 import { UserRole } from 'src/app/core/constants/domain.constants';
-import { User } from '../../../entities/user.entity';
+import { User } from '../../../schemas/user.schema';
 
 // NOTE: BusinessInfo has been moved to its own module in src/app/modules/business-info
 // User entity now references BusinessInfo via businessInfoId

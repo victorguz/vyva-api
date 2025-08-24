@@ -1,20 +1,26 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel, Model } from 'nestjs-dynamoose';
-import { User } from 'src/app/entities/user.entity';
+import { InjectModel, Model, TransactionSupport } from 'nestjs-dynamoose';
+import { SalesOrderStatus } from 'src/app/core/constants/domain.constants';
+import { User } from 'src/app/schemas/user.schema';
 import { v4 as uuidv4 } from 'uuid';
 
 import { GenericResponse } from '../../core/interfaces/generic-response.interface';
-import { SalesOrder, SalesOrderKey } from '../../entities/sales-order.entity';
+import { Product, ProductKey } from '../../schemas/product.schema';
+import { SalesOrder, SalesOrderKey } from '../../schemas/sales-order.schema';
 import { handleError } from '../../shared/error.functions';
 import { deleteEmptyProperties } from '../../shared/shared.functions';
 import { CreateSalesOrderDto, ListSalesOrderDto, UpdateSalesOrderDto } from './dto/sales-orders.dto';
 
 @Injectable()
-export class SalesOrdersService {
+export class SalesOrdersService extends TransactionSupport {
   constructor(
     @InjectModel('SalesOrder')
     private readonly model: Model<SalesOrder, SalesOrderKey>,
-  ) {}
+    @InjectModel('Product')
+    private readonly productModel: Model<Product, ProductKey>,
+  ) {
+    super();
+  }
 
   async create(
     body: CreateSalesOrderDto,
@@ -24,24 +30,62 @@ export class SalesOrdersService {
       // Generate unique order number
       const orderNumber = this.generateOrderNumber();
 
-      // Calculate total amount
-      const totalAmount = this.calculateTotalAmount(body.products);
+      // Fetch products from database to get accurate prices and stock info
+      const productDetails = await this.fetchProductDetails(
+        body.products,
+        user.businessInfoId || user.id,
+      );
 
-      const newSalesOrder = await this.model.create({
+      // Calculate total amount from database product prices
+      const totalAmount = this.calculateTotalAmountFromProducts(
+        body.products,
+        productDetails,
+      );
+
+      // Validate stock availability for products that require stock
+      this.validateStockAvailability(body.products, productDetails);
+      const salesOrder = {
         id: uuidv4(),
         orderNumber,
         idCustomer: body.idCustomer,
         products: body.products,
         paymentMethods: body.paymentMethods,
         totalAmount,
-        status: 'pending',
-        businessInfoId: user.id,
+        status: SalesOrderStatus.pending,
+        businessInfoId: user.businessInfoId || user.id,
         createdBy: user.id,
         createdAt: new Date(),
-        updatedAt: new Date(),
+      };
+      // Create sales order using Dynamoose
+      const newSalesOrder = this.model.transaction.create({
+        ...salesOrder,
       });
 
-      return new GenericResponse(newSalesOrder as SalesOrder);
+      // Update product stock for products that require stock management
+      const stockUpdates = [];
+      for (const orderProduct of body.products) {
+        const product = productDetails.get(orderProduct.id);
+        if (product && product.requireStock) {
+          const newStock = Math.max(
+            0,
+            (product.stock ?? 0) - orderProduct.quantity,
+          );
+          stockUpdates.push(
+            this.productModel.transaction.update(
+              { id: orderProduct.id },
+              {
+                stock: newStock,
+              },
+            ),
+          );
+        }
+      }
+
+      await this.transaction([newSalesOrder, ...stockUpdates]);
+
+      const salesOrderResult = await this.model.get({ id: salesOrder.id });
+      // Return the created sales order
+      return new GenericResponse(salesOrderResult);
     } catch (error) {
       console.log(error);
       throw handleError(error);
@@ -115,9 +159,6 @@ export class SalesOrdersService {
       // Clean the DTO first to remove undefined/null values
       const cleanedDto = deleteEmptyProperties(updateSalesOrderDto);
 
-      // Add updatedAt timestamp
-      cleanedDto.updatedAt = new Date();
-
       await this.model.update({ id }, cleanedDto);
       const updatedSalesOrder = await this.model.get({ id });
 
@@ -137,7 +178,7 @@ export class SalesOrdersService {
     modifiedBy?: string,
   ): Promise<GenericResponse<SalesOrder>> {
     try {
-      const updateData: any = { status, updatedAt: new Date() };
+      const updateData: any = { status };
 
       if (modifiedBy) {
         updateData.modifiedBy = modifiedBy;
@@ -165,6 +206,77 @@ export class SalesOrdersService {
     }
   }
 
+  private async fetchProductDetails(
+    products: any[],
+    businessInfoId: string,
+  ): Promise<Map<string, Product>> {
+    const productMap = new Map<string, Product>();
+
+    for (const product of products) {
+      try {
+        const productDetail = await this.productModel.get({ id: product.id });
+        if (!productDetail) {
+          throw new Error(`Product with ID ${product.id} not found`);
+        }
+
+        const productData = productDetail.toJSON() as Product;
+
+        // Verify product belongs to the same business
+        if (productData.businessInfoId !== businessInfoId) {
+          throw new Error(
+            `Product ${product.id} does not belong to your business`,
+          );
+        }
+
+        productMap.set(product.id, productData);
+      } catch (error) {
+        throw new Error(
+          `Failed to fetch product ${product.id}: ${error.message}`,
+        );
+      }
+    }
+
+    return productMap;
+  }
+
+  private calculateTotalAmountFromProducts(
+    orderProducts: any[],
+    productDetails: Map<string, Product>,
+  ): number {
+    return orderProducts.reduce((total, orderProduct) => {
+      const product = productDetails.get(orderProduct.id);
+      if (!product) {
+        throw new Error(
+          `Product ${orderProduct.id} not found in product details`,
+        );
+      }
+
+      const price = product.offerPrice ?? product.price ?? 0;
+      return total + price * orderProduct.quantity;
+    }, 0);
+  }
+
+  private validateStockAvailability(
+    orderProducts: any[],
+    productDetails: Map<string, Product>,
+  ): void {
+    for (const orderProduct of orderProducts) {
+      const product = productDetails.get(orderProduct.id);
+      if (!product) {
+        throw new Error(`Product ${orderProduct.id} not found`);
+      }
+
+      if (product.requireStock) {
+        const currentStock = product.stock ?? 0;
+        if (currentStock < orderProduct.quantity) {
+          throw new Error(
+            `Insufficient stock for product ${product.name}. Available: ${currentStock}, Required: ${orderProduct.quantity}`,
+          );
+        }
+      }
+    }
+  }
+
   private generateOrderNumber(): string {
     const timestamp = Date.now();
     const random = Math.floor(Math.random() * 10000);
@@ -176,7 +288,7 @@ export class SalesOrdersService {
 
   private calculateTotalAmount(products: any[]): number {
     return products.reduce((total, product) => {
-      const price = product.offerPrice > 0 ? product.offerPrice : product.price;
+      const price = product.offerPrice ?? product.price;
       return total + price * product.quantity;
     }, 0);
   }

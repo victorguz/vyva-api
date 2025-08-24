@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { DynamooseModule } from 'nestjs-dynamoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { UserSchema } from '../../entities/user.entity';
+import { UserSchema } from '../../schemas/user.schema';
 import { JWT_EXPIRATION } from '../../core/config/environment.config';
 import { AuthGuard } from './guards/auth.guard';
 

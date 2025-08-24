@@ -1,4 +1,4 @@
-import { User } from 'src/app/entities/user.entity';
+import { User } from 'src/app/schemas/user.schema';
 
 export interface AuthRequest {
   username: string;

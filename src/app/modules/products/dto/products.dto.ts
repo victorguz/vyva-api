@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsBoolean, IsIn, IsNotEmpty, IsNumber, IsOptional, IsPositive, IsString, IsUUID } from 'class-validator';
 
 import { MeasurementUnits, ProductStatus } from '../../../core/constants/domain.constants';
-import { Product } from '../../../entities/product.entity';
+import { Product } from '../../../schemas/product.schema';
 
 export class CreateProductDto {
   @ApiProperty({

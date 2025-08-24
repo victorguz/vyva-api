@@ -20,8 +20,3 @@ export const dynamooseConfig = (
     },
   };
 };
-
-export function getDatabasePrefix(configService: ConfigService): string {
-  const env = configService.get('NODE_ENV');
-  return `${env}-vyva`;
-}

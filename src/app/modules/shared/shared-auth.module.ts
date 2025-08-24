@@ -1,9 +1,11 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { DynamooseModule } from 'nestjs-dynamoose';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { UserSchema } from '../../entities/user.entity';
+
 import { JWT_EXPIRATION } from '../../core/config/environment.config';
+import { UserSchema } from '../../schemas/user.schema';
+import { CustomerSchema } from '../../schemas/customer.schema';
 import { AuthGuard } from '../auth/guards/auth.guard';
 
 @Module({
@@ -25,6 +27,18 @@ import { AuthGuard } from '../auth/guards/auth.guard';
         schema: UserSchema,
         options: {
           tableName: 'users',
+        },
+      },
+      {
+        name: 'Customer',
+        schema: CustomerSchema,
+        options: {
+          tableName: 'customers',
+        },
+        serializers: {
+          frontend: {
+            include: ['id', 'firstName', 'lastName', 'email', 'phone','createdAt'],
+          },
         },
       },
     ]),

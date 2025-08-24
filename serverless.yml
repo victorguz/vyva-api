@@ -26,6 +26,8 @@ provider:
             - dynamodb:DeleteItem
             - dynamodb:Query
             - dynamodb:Scan
+            - dynamodb:TransactWrite
+            - dynamodb:TransactRead
           Resource:
             - arn:aws:dynamodb:${self:provider.region}:754881596744:table/${self:provider.stage}-vyva-*
             - arn:aws:dynamodb:${self:provider.region}:754881596744:table/${self:provider.stage}-vyva-*/index/*

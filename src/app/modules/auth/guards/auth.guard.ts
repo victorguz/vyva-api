@@ -5,7 +5,7 @@ import { AuthUser } from '../dtos/auth.dto';
 import { handleError } from 'src/app/shared/error.functions';
 import { InjectModel } from 'nestjs-dynamoose';
 import { Model } from 'nestjs-dynamoose';
-import { User, UserKey } from 'src/app/entities/user.entity';
+import { User, UserKey } from 'src/app/schemas/user.schema';
 
 @Injectable()
 export class AuthGuard implements CanActivate {

@@ -5,7 +5,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { DynamooseModule } from 'nestjs-dynamoose';
 import { SharedModule } from 'src/app/shared/shared.module';
 import { JWT_EXPIRATION } from 'src/app/core/config/environment.config';
-import { UserSchema } from 'src/app/entities/user.entity';
+import { UserSchema } from 'src/app/schemas/user.schema';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({

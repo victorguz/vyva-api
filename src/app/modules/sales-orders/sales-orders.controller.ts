@@ -2,8 +2,8 @@ import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } f
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { GenericResponse } from '../../core/interfaces/generic-response.interface';
-import { SalesOrder } from '../../entities/sales-order.entity';
-import { User } from '../../entities/user.entity';
+import { SalesOrder } from '../../schemas/sales-order.schema';
+import { User } from '../../schemas/user.schema';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { CreateSalesOrderDto, ListSalesOrderDto, UpdateSalesOrderDto } from './dto/sales-orders.dto';

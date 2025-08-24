@@ -41,7 +41,7 @@ export class SalesOrderPaymentMethodDto {
   @ApiProperty({ description: 'Payment method type', enum: PaymentMethodType })
   @IsString()
   @IsNotEmpty()
-  paymentMethod: PaymentMethodType;
+  type: PaymentMethodType;
 }
 
 export class CreateSalesOrderDto {
