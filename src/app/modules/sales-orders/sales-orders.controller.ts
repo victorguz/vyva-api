@@ -6,7 +6,13 @@ import { SalesOrder } from '../../schemas/sales-order.schema';
 import { User } from '../../schemas/user.schema';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { AuthGuard } from '../auth/guards/auth.guard';
-import { CreateSalesOrderDto, ListSalesOrderDto, UpdateSalesOrderDto } from './dto/sales-orders.dto';
+import {
+  CreateSalesOrderDto,
+  DateRangeReportDto,
+  ListSalesOrderDto,
+  SalesReportResponseDto,
+  UpdateSalesOrderDto,
+} from './dto/sales-orders.dto';
 import { SalesOrdersService } from './sales-orders.service';
 
 @ApiTags('Sales Orders')
@@ -26,7 +32,7 @@ export class SalesOrdersController {
     @Body() createSalesOrderDto: CreateSalesOrderDto,
     @CurrentUser() user?: User,
   ): Promise<GenericResponse<SalesOrder>> {
-    return this.salesOrdersService.create(createSalesOrderDto,user);
+    return this.salesOrdersService.create(createSalesOrderDto, user);
   }
 
   @Get()
@@ -115,4 +121,25 @@ export class SalesOrdersController {
   async remove(@Param('id') id: string): Promise<GenericResponse<boolean>> {
     return this.salesOrdersService.remove(id);
   }
+
+  @Post('daily-sales-cards')
+  @ApiOperation({ summary: 'Get sales report for a date range' })
+  @ApiResponse({
+    status: 200,
+    description: 'Return sales report for the specified date range.',
+    type: GenericResponse<SalesReportResponseDto>,
+  })
+  @UseGuards(AuthGuard)
+  async getDailySalesCards(
+    @Body() dateRangeDto: DateRangeReportDto,
+    @CurrentUser() user: User,
+  ): Promise<GenericResponse<SalesReportResponseDto>> {
+    const businessInfoId = user.businessInfoId || user.id;
+    return this.salesOrdersService.getDailySalesCards(
+      dateRangeDto,
+      businessInfoId,
+    );
+  }
+
+  
 }

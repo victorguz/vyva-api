@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import * as moment from 'moment';
 import { InjectModel, Model, TransactionSupport } from 'nestjs-dynamoose';
 import { SalesOrderStatus } from 'src/app/core/constants/domain.constants';
 import { User } from 'src/app/schemas/user.schema';
@@ -9,7 +10,15 @@ import { Product, ProductKey } from '../../schemas/product.schema';
 import { SalesOrder, SalesOrderKey } from '../../schemas/sales-order.schema';
 import { handleError } from '../../shared/error.functions';
 import { deleteEmptyProperties } from '../../shared/shared.functions';
-import { CreateSalesOrderDto, ListSalesOrderDto, UpdateSalesOrderDto } from './dto/sales-orders.dto';
+import {
+  CreateSalesOrderDto,
+  DailyPaymentMethodsResponseDto,
+  DateRangeReportDto,
+  ListSalesOrderDto,
+  PaymentMethodSummaryDto,
+  SalesReportResponseDto,
+  UpdateSalesOrderDto,
+} from './dto/sales-orders.dto';
 
 @Injectable()
 export class SalesOrdersService extends TransactionSupport {
@@ -51,7 +60,7 @@ export class SalesOrdersService extends TransactionSupport {
         products: body.products,
         paymentMethods: body.paymentMethods,
         totalAmount,
-        status: SalesOrderStatus.pending,
+        status: SalesOrderStatus.paid,
         businessInfoId: user.businessInfoId || user.id,
         createdBy: user.id,
         createdAt: new Date(),
@@ -291,5 +300,106 @@ export class SalesOrdersService extends TransactionSupport {
       const price = product.offerPrice ?? product.price;
       return total + price * product.quantity;
     }, 0);
+  }
+
+  async getDailySalesCards(
+    dateRange: DateRangeReportDto,
+    businessInfoId: string,
+  ): Promise<GenericResponse<SalesReportResponseDto>> {
+    try {
+      const startDate = moment(dateRange.startDate).startOf('day');
+      const endDate = moment(dateRange.endDate).endOf('day');
+
+      // Calcular el período anterior con la misma duración
+      const periodDuration = moment.duration(endDate.diff(startDate));
+      const previousEndDate = moment(startDate).subtract(1, 'day').endOf('day');
+      const previousStartDate =
+        moment(previousEndDate).subtract(periodDuration);
+
+      // Obtener ventas del período actual
+      const currentPeriodSales = await this.getSalesInDateRange(
+        startDate.toDate(),
+        endDate.toDate(),
+        businessInfoId,
+      );
+
+      // Obtener ventas del período anterior
+      const previousPeriodSales = await this.getSalesInDateRange(
+        previousStartDate.toDate(),
+        previousEndDate.toDate(),
+        businessInfoId,
+      );
+
+      // Calcular totales
+      const currentValue = this.calculateTotalFromSales(currentPeriodSales);
+      const lastValue = this.calculateTotalFromSales(previousPeriodSales);
+
+      // Determinar la frecuencia basada en la duración del período
+      const frequency = this.determineFrequencyWithMoment(startDate, endDate);
+
+      const report: SalesReportResponseDto = {
+        title: frequency,
+        description: `Último ${frequency.toLowerCase()}`,
+        currentValue,
+        lastValue,
+        isCurrency: true,
+        frequency: frequency.toLowerCase(),
+      };
+
+      return new GenericResponse(report);
+    } catch (error) {
+      throw handleError(error);
+    }
+  }
+
+  private async getSalesInDateRange(
+    startDate: Date,
+    endDate: Date,
+    businessInfoId: string,
+  ): Promise<SalesOrder[]> {
+    try {
+      // Primero obtener todas las ventas del negocio y filtrar en memoria
+      // Esto evita problemas con tipos de datos en DynamoDB
+      const allSalesOrders = await this.model
+        .scan()
+        .where('businessInfoId')
+        .eq(businessInfoId)
+        .exec();
+
+      // Filtrar por fecha en memoria
+      const filteredOrders = allSalesOrders.filter((order) => {
+        const orderDate = new Date(order.createdAt);
+        return orderDate >= startDate && orderDate <= endDate;
+      });
+
+      return filteredOrders.map((order) => order as SalesOrder);
+    } catch (error) {
+      throw new Error(`Error fetching sales orders: ${error.message}`);
+    }
+  }
+
+  private calculateTotalFromSales(salesOrders: SalesOrder[]): number {
+    return salesOrders.reduce((total, order) => {
+      return total + (order.totalAmount || 0);
+    }, 0);
+  }
+
+  private determineFrequencyWithMoment(
+    startDate: moment.Moment,
+    endDate: moment.Moment,
+  ): string {
+    const durationDays = endDate.diff(startDate, 'days') + 1; // +1 para incluir ambos días
+
+    if (durationDays === 1) {
+      return 'Día';
+    } else if (durationDays <= 7) {
+      return 'Semana';
+    } else if (durationDays <= 31) {
+      return 'Mes';
+    } else if (durationDays <= 365) {
+      return 'Año';
+    } else {
+      return 'Período';
+    }
   }
 }

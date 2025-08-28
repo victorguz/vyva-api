@@ -1,9 +1,19 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsArray, IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsDateString,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 
 import { PaymentMethodType } from '../../../core/constants/domain.constants';
 import { SalesOrderItem } from '../../../entities/sales-order.entity';
+import { DashboardSingleCardItem } from '../../../interfaces/dashboard.interface';
 
 export class SalesOrderItemDto implements SalesOrderItem {
   @ApiProperty({ description: 'Product ID' })
@@ -95,4 +105,70 @@ export class ListSalesOrderDto {
   @IsString()
   @IsOptional()
   businessInfoId?: string;
+}
+
+export class DateRangeReportDto {
+  @ApiProperty({
+    description: 'Start date for the report (ISO 8601 format)',
+    example: '2024-01-01',
+  })
+  @IsDateString()
+  @IsNotEmpty()
+  startDate: string;
+
+  @ApiProperty({
+    description: 'End date for the report (ISO 8601 format)',
+    example: '2024-01-31',
+  })
+  @IsDateString()
+  @IsNotEmpty()
+  endDate: string;
+}
+
+export class SalesReportResponseDto implements DashboardSingleCardItem {
+  @ApiProperty({ description: 'Report title' })
+  title: string;
+
+  @ApiProperty({ description: 'Report description' })
+  description: string;
+
+  @ApiProperty({ description: 'Current period value' })
+  currentValue: number;
+
+  @ApiProperty({ description: 'Previous period value' })
+  lastValue: number;
+
+  @ApiProperty({ description: 'Whether the value represents currency' })
+  isCurrency: boolean;
+
+  @ApiProperty({ description: 'Report frequency' })
+  frequency: string;
+}
+
+export class PaymentMethodSummaryDto {
+  @ApiProperty({ description: 'Payment method type' })
+  paymentMethod: string;
+
+  @ApiProperty({ description: 'Total amount for this payment method' })
+  totalAmount: number;
+
+  @ApiProperty({ description: 'Number of transactions' })
+  transactionCount: number;
+
+  @ApiProperty({ description: 'Percentage of total sales' })
+  percentage: number;
+}
+
+export class DailyPaymentMethodsResponseDto {
+  @ApiProperty({ description: 'Date of the report' })
+  date: string;
+
+  @ApiProperty({ description: 'Total daily sales amount' })
+  totalDailySales: number;
+
+  @ApiProperty({ description: 'Payment methods breakdown', type: [PaymentMethodSummaryDto] })
+  paymentMethods: PaymentMethodSummaryDto[];
+
+  @ApiProperty({ description: 'Total number of orders' })
+  totalOrders: number;
 }
