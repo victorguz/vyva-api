@@ -119,3 +119,4 @@ export const SalesOrderSchema = new Schema(
     timestamps: true,
   },
 );
+

@@ -125,3 +125,4 @@ export const ProductSchema = new Schema(
     timestamps: true,
   },
 );
+
