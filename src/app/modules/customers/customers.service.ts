@@ -217,7 +217,7 @@ export class CustomersService {
     try {
       // Obtener todos los clientes del negocio
       const allCustomers = await this.model
-        .scan()
+        .scan('id')
         .where('businessId')
         .eq(businessId)
         .exec();
