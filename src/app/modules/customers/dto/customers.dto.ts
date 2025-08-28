@@ -406,3 +406,11 @@ export class CustomerResponseDto implements Customer {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export class CustomersCountResponseDto {
+  @ApiProperty({ description: 'Total number of registered customers' })
+  totalCustomers: number;
+
+  @ApiProperty({ description: 'Number of customers registered today' })
+  customersRegisteredToday: number;
+}

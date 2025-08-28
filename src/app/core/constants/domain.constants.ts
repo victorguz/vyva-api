@@ -21,7 +21,7 @@ export enum PaymentMethodType {
   cash = 'cash',
   transfer = 'transfer',
   card = 'card',
-  link = 'link',
+  pse = 'pse',
 }
 
 export enum MeasurementUnits {

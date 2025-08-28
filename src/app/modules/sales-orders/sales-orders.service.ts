@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import * as moment from 'moment';
 import { InjectModel, Model, TransactionSupport } from 'nestjs-dynamoose';
-import { SalesOrderStatus } from 'src/app/core/constants/domain.constants';
+import { PaymentMethodType, SalesOrderStatus } from 'src/app/core/constants/domain.constants';
 import { User } from 'src/app/schemas/user.schema';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -119,7 +119,7 @@ export class SalesOrdersService extends TransactionSupport {
         query = query.where('businessInfoId').eq(filters.businessInfoId);
       }
 
-      const salesOrders = await query.exec();
+      const salesOrders = await query.limit(100).exec();
       return new GenericResponse(
         salesOrders.map((order) => order as SalesOrder),
       );
@@ -400,6 +400,81 @@ export class SalesOrdersService extends TransactionSupport {
       return 'Año';
     } else {
       return 'Período';
+    }
+  }
+
+  async getDailyPaymentMethodsSummary(
+    businessInfoId: string,
+  ): Promise<GenericResponse<DailyPaymentMethodsResponseDto>> {
+    try {
+      // Obtener todas las órdenes del día actual para el negocio
+      const today = moment().startOf('day');
+      const endOfDay = moment().endOf('day');
+
+      const todayOrders = await this.getSalesInDateRange(
+        today.toDate(),
+        endOfDay.toDate(),
+        businessInfoId,
+      );
+
+      // Calcular el total de ventas del día
+      const totalDailySales = this.calculateTotalFromSales(todayOrders);
+
+      // Procesar métodos de pago
+      const paymentMethodsMap = new Map<
+        string,
+        { total: number; count: number }
+      >();
+
+      // Iterar por cada orden y sus métodos de pago
+      todayOrders.forEach((order) => {
+        order.paymentMethods.forEach((payment) => {
+          const methodType = payment.type;
+          const currentData = paymentMethodsMap.get(methodType) || {
+            total: 0,
+            count: 0,
+          };
+
+          paymentMethodsMap.set(methodType, {
+            total: currentData.total + payment.value,
+            count: currentData.count + 1,
+          });
+        });
+      });
+
+      // Convertir el mapa a array de DTOs, incluyendo todos los métodos de pago
+      const paymentMethods: PaymentMethodSummaryDto[] = [];
+
+      // Iterar por todos los métodos de pago disponibles
+      Object.values(PaymentMethodType).forEach((methodType) => {
+        const data = paymentMethodsMap.get(methodType) || {
+          total: 0,
+          count: 0,
+        };
+        const percentage =
+          totalDailySales > 0 ? (data.total / totalDailySales) * 100 : 0;
+
+        paymentMethods.push({
+          paymentMethod: methodType,
+          totalAmount: data.total,
+          transactionCount: data.count,
+          percentage: Math.round(percentage * 100) / 100, // Redondear a 2 decimales
+        });
+      });
+
+      // Ordenar por mayor monto
+      paymentMethods.sort((a, b) => b.totalAmount - a.totalAmount);
+
+      const response: DailyPaymentMethodsResponseDto = {
+        date: today.format('YYYY-MM-DD'),
+        totalDailySales,
+        paymentMethods,
+        totalOrders: todayOrders.length,
+      };
+
+      return new GenericResponse(response);
+    } catch (error) {
+      throw handleError(error);
     }
   }
 }

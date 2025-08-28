@@ -7,7 +7,7 @@ import { Customer } from '../../schemas/customer.schema';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { CustomersService } from './customers.service';
-import { CreateCustomerDto, UpdateCustomerDto } from './dto/customers.dto';
+import { CreateCustomerDto, CustomersCountResponseDto, UpdateCustomerDto } from './dto/customers.dto';
 
 @ApiTags('Customers')
 @Controller('customers')
@@ -40,6 +40,20 @@ export class CustomersController {
     @CurrentUser() user: User,
   ): Promise<GenericResponse<Customer[]>> {
     return this.customersService.findAll(user.id);
+  }
+
+  @Get('count')
+  @ApiOperation({ summary: 'Get customers count statistics' })
+  @ApiResponse({
+    status: 200,
+    description: 'Return total customers and customers registered today count.',
+    type: GenericResponse<CustomersCountResponseDto>,
+  })
+  async getCustomersCount(
+    @CurrentUser() user: User,
+  ): Promise<GenericResponse<CustomersCountResponseDto>> {
+    const businessId = user.businessInfoId || user.id;
+    return this.customersService.getCustomersCount(businessId);
   }
 
   @Get(':id')

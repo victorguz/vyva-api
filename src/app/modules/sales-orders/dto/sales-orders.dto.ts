@@ -166,7 +166,10 @@ export class DailyPaymentMethodsResponseDto {
   @ApiProperty({ description: 'Total daily sales amount' })
   totalDailySales: number;
 
-  @ApiProperty({ description: 'Payment methods breakdown', type: [PaymentMethodSummaryDto] })
+  @ApiProperty({
+    description: 'Payment methods breakdown',
+    type: [PaymentMethodSummaryDto],
+  })
   paymentMethods: PaymentMethodSummaryDto[];
 
   @ApiProperty({ description: 'Total number of orders' })

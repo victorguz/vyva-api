@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import * as moment from 'moment';
 import { InjectModel, Model } from 'nestjs-dynamoose';
 import { deleteEmptyProperties } from 'src/app/shared/shared.functions';
 import { v4 as uuidv4 } from 'uuid';
@@ -6,7 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { GenericResponse } from '../../core/interfaces/generic-response.interface';
 import { Customer, CustomerKey } from '../../schemas/customer.schema';
 import { handleError } from '../../shared/error.functions';
-import { CreateCustomerDto, UpdateCustomerDto } from './dto/customers.dto';
+import { CreateCustomerDto, CustomersCountResponseDto, UpdateCustomerDto } from './dto/customers.dto';
 
 @Injectable()
 export class CustomersService {
@@ -205,6 +206,38 @@ export class CustomersService {
 
       await this.model.update({ id }, { status: false });
       return new GenericResponse(undefined);
+    } catch (error) {
+      throw handleError(error);
+    }
+  }
+
+  async getCustomersCount(
+    businessId: string,
+  ): Promise<GenericResponse<CustomersCountResponseDto>> {
+    try {
+      // Obtener todos los clientes del negocio
+      const allCustomers = await this.model
+        .scan()
+        .where('businessId')
+        .eq(businessId)
+        .exec();
+
+      // Calcular fechas para el filtro de hoy
+      const today = moment().startOf('day');
+      const endOfDay = moment().endOf('day');
+
+      // Filtrar clientes registrados hoy
+      const customersRegisteredToday = allCustomers.filter((customer) => {
+        const customerDate = moment(customer.createdAt);
+        return customerDate.isBetween(today, endOfDay, null, '[]');
+      });
+
+      const response: CustomersCountResponseDto = {
+        totalCustomers: allCustomers.length,
+        customersRegisteredToday: customersRegisteredToday.length,
+      };
+
+      return new GenericResponse(response);
     } catch (error) {
       throw handleError(error);
     }

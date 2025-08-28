@@ -8,6 +8,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import {
   CreateSalesOrderDto,
+  DailyPaymentMethodsResponseDto,
   DateRangeReportDto,
   ListSalesOrderDto,
   SalesReportResponseDto,
@@ -47,18 +48,6 @@ export class SalesOrdersController {
     @Query() filters: ListSalesOrderDto,
   ): Promise<GenericResponse<SalesOrder[]>> {
     return this.salesOrdersService.findAll(filters);
-  }
-
-  @Get(':id')
-  @ApiOperation({ summary: 'Get a sales order by id' })
-  @ApiResponse({
-    status: 200,
-    description: 'Return the sales order.',
-    type: GenericResponse<SalesOrder>,
-  })
-  @UseGuards(AuthGuard)
-  async findOne(@Param('id') id: string): Promise<GenericResponse<SalesOrder>> {
-    return this.salesOrdersService.findOne(id);
   }
 
   @Get('order-number/:orderNumber')
@@ -141,5 +130,23 @@ export class SalesOrdersController {
     );
   }
 
-  
+  @Get('daily-payment-methods')
+  @ApiOperation({
+    summary: 'Get daily sales value breakdown by payment methods',
+  })
+  @ApiResponse({
+    status: 200,
+    description:
+      'Return daily sales breakdown by payment methods for the current business.',
+    type: GenericResponse<DailyPaymentMethodsResponseDto>,
+  })
+  @UseGuards(AuthGuard)
+  async getDailyPaymentMethodsSummary(
+    @CurrentUser() user: User,
+  ): Promise<GenericResponse<DailyPaymentMethodsResponseDto>> {
+    const businessInfoId = user.businessInfoId || user.id;
+    return this.salesOrdersService.getDailyPaymentMethodsSummary(
+      businessInfoId,
+    );
+  }
 }
