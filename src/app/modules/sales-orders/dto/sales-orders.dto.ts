@@ -12,8 +12,8 @@ import {
 } from 'class-validator';
 
 import { PaymentMethodType } from '../../../core/constants/domain.constants';
-import { SalesOrderItem } from '../../../entities/sales-order.entity';
 import { DashboardSingleCardItem } from '../../../interfaces/dashboard.interface';
+import { SalesOrderItem } from '../../../schemas/sales-order.schema';
 
 export class SalesOrderItemDto implements SalesOrderItem {
   @ApiProperty({ description: 'Product ID' })

@@ -126,8 +126,8 @@ export class CustomersService {
         userId: body.userId,
         businessId: businessId, // Set businessId from current user
         data: body.data,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: moment().toISOString(),
+        updatedAt: moment().toISOString(),
       });
       // Si no hay duplicados, crear el customer
       const newCustomer = await this.model.create(customerObj);
@@ -217,7 +217,8 @@ export class CustomersService {
     try {
       // Obtener todos los clientes del negocio
       const allCustomers = await this.model
-        .scan('id')
+        .scan()
+        .attributes(['businessId', 'createdAt'])
         .where('businessId')
         .eq(businessId)
         .exec();
@@ -226,7 +227,9 @@ export class CustomersService {
       const today = moment().startOf('day');
       const endOfDay = moment().endOf('day');
 
-      // Filtrar clientes registrados hoy
+      // Filtrar clientes registrados hoy - usar consulta directa si las fechas son strings
+      const todayISO = today.toISOString();
+
       const customersRegisteredToday = allCustomers.filter((customer) => {
         const customerDate = moment(customer.createdAt);
         return customerDate.isBetween(today, endOfDay, null, '[]');
