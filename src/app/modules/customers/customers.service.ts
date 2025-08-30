@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import * as moment from 'moment';
 import { InjectModel, Model } from 'nestjs-dynamoose';
+import { User } from 'src/app/schemas/user.schema';
 import { deleteEmptyProperties } from 'src/app/shared/shared.functions';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -16,12 +17,12 @@ export class CustomersService {
     private readonly model: Model<Customer, CustomerKey>,
   ) {}
 
-  async findAll(businessId: string): Promise<GenericResponse<Customer[]>> {
+  async findAll(user: User): Promise<GenericResponse<Customer[]>> {
     try {
       const customers = await this.model
         .scan()
         .where('businessId')
-        .eq(businessId)
+        .eq(user.businessInfoId || user.id)
         .exec();
 
       return new GenericResponse(
@@ -34,7 +35,7 @@ export class CustomersService {
 
   async findOne(
     id: string,
-    businessId: string,
+    user: User,
   ): Promise<GenericResponse<Customer>> {
     try {
       const customer = await this.model.get({ id });
@@ -44,7 +45,7 @@ export class CustomersService {
 
       // Verify customer belongs to the business
       const customerData = customer.toJSON() as Customer;
-      if (customerData.businessId !== businessId) {
+      if (customerData.businessId !== user.businessInfoId || user.id) {
         throw new Error('MS007'); // Not found (for security)
       }
 
@@ -56,7 +57,7 @@ export class CustomersService {
 
   async findOneByEmail(
     email: string,
-    businessId: string,
+    user: User,
   ): Promise<GenericResponse<Customer>> {
     try {
       const customers = await this.model
@@ -64,7 +65,7 @@ export class CustomersService {
         .where('email')
         .eq(email.toLowerCase())
         .where('businessId')
-        .eq(businessId)
+        .eq(user.businessInfoId || user.id)
         .exec();
 
       if (!customers || customers.length === 0) {
@@ -80,7 +81,7 @@ export class CustomersService {
 
   async findByUserId(
     userId: string,
-    businessId: string,
+    user: User,
   ): Promise<GenericResponse<Customer[]>> {
     try {
       const customers = await this.model
@@ -88,7 +89,7 @@ export class CustomersService {
         .where('userId')
         .eq(userId)
         .where('businessId')
-        .eq(businessId)
+        .eq(user.businessInfoId || user.id)
         .exec();
 
       return new GenericResponse(
@@ -101,7 +102,7 @@ export class CustomersService {
 
   async create(
     body: CreateCustomerDto,
-    businessId: string,
+    user: User,
   ): Promise<GenericResponse<Customer>> {
     try {
       // Verificar email duplicado solo si se proporciona email (dentro del mismo business)
@@ -124,7 +125,7 @@ export class CustomersService {
         address: body.address,
         profilePicture: body.profilePicture,
         userId: body.userId,
-        businessId: businessId, // Set businessId from current user
+        businessId: user.businessInfoId || user.id, // Set businessId from current user
         data: body.data,
         createdAt: moment().toISOString(),
         updatedAt: moment().toISOString(),
@@ -142,7 +143,7 @@ export class CustomersService {
   async update(
     id: string,
     updateCustomerDto: UpdateCustomerDto,
-    businessId: string,
+    user: User,
   ): Promise<GenericResponse<Customer>> {
     try {
       // First verify customer belongs to this business
@@ -152,7 +153,7 @@ export class CustomersService {
       }
 
       const existingCustomerData = existingCustomer.toJSON() as Customer;
-      if (existingCustomerData.businessId !== businessId) {
+      if (existingCustomerData.businessId !== user.businessInfoId || user.id) {
         throw new Error('MS007'); // Not found (for security)
       }
 
@@ -191,7 +192,7 @@ export class CustomersService {
     }
   }
 
-  async remove(id: string, businessId: string): Promise<GenericResponse<void>> {
+  async remove(id: string, user: User): Promise<GenericResponse<void>> {
     try {
       const customer = await this.model.get({ id });
       if (!customer) {
@@ -200,7 +201,7 @@ export class CustomersService {
 
       // Verify customer belongs to this business
       const customerData = customer.toJSON() as Customer;
-      if (customerData.businessId !== businessId) {
+      if (customerData.businessId !== user.businessInfoId || user.id) {
         throw new Error('MS007'); // Not found (for security)
       }
 
@@ -212,7 +213,7 @@ export class CustomersService {
   }
 
   async getCustomersCount(
-    businessId: string,
+    user: User,
   ): Promise<GenericResponse<CustomersCountResponseDto>> {
     try {
       // Obtener todos los clientes del negocio
@@ -220,7 +221,7 @@ export class CustomersService {
         .scan()
         .attributes(['businessId', 'createdAt'])
         .where('businessId')
-        .eq(businessId)
+        .eq(user.businessInfoId || user.id)
         .exec();
 
       // Calcular fechas para el filtro de hoy

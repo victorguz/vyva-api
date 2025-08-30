@@ -126,23 +126,6 @@ export class CreateProductDto {
   @IsNumber()
   @IsOptional()
   stock?: number = 0;
-
-  @ApiProperty({
-    description: 'Business Info ID',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-  })
-  @IsUUID()
-  @IsNotEmpty()
-  businessInfoId!: string;
-
-  @ApiProperty({
-    description: 'User ID who created the product',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-    required: false,
-  })
-  @IsUUID()
-  @IsOptional()
-  createdBy?: string;
 }
 
 export class UpdateProductDto implements Partial<CreateProductDto> {
@@ -253,7 +236,6 @@ export class UpdateProductDto implements Partial<CreateProductDto> {
   @IsOptional()
   requireStock?: boolean;
 
-
   @ApiProperty({
     description: 'Price of the product',
     example: 99.99,
@@ -281,23 +263,7 @@ export class UpdateProductDto implements Partial<CreateProductDto> {
   @IsOptional()
   stock?: number;
 
-  @ApiProperty({
-    description: 'Business Info ID',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-    required: false,
-  })
-  @IsUUID()
-  @IsOptional()
-  businessInfoId?: string;
 
-  @ApiProperty({
-    description: 'User ID who modified the product',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-    required: false,
-  })
-  @IsUUID()
-  @IsOptional()
-  modifiedBy?: string;
 }
 
 export class FindProductDto {
@@ -364,32 +330,6 @@ export class ListProductDto {
   @IsOptional()
   status?: ProductStatus;
 
-  @ApiProperty({
-    description: 'User ID who created the product',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-    required: false,
-  })
-  @IsUUID()
-  @IsOptional()
-  createdBy?: string;
-
-  @ApiProperty({
-    description: 'User ID who modified the product',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-    required: false,
-  })
-  @IsUUID()
-  @IsOptional()
-  modifiedBy?: string;
-
-  @ApiProperty({
-    description: 'Business Info ID',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-    required: false,
-  })
-  @IsUUID()
-  @IsOptional()
-  businessInfoId?: string;
 }
 
 export class ProductResponseDto implements Product {

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel, Model } from 'nestjs-dynamoose';
+import { User } from 'src/app/schemas/user.schema';
 import { deleteEmptyProperties } from 'src/app/shared/shared.functions';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -16,19 +17,28 @@ export class ProductsService {
     private readonly model: Model<Product, ProductKey>,
   ) {}
 
-  async findOne(id: string): Promise<GenericResponse<Product>> {
+  async findOne(id: string, user: User  ): Promise<GenericResponse<Product>> {
     try {
-      const product = await this.model.get({ id });
+      const product = await this.model
+        .scan()
+        .where('id')
+        .eq(id)
+        .where('businessInfoId')
+        .eq(user.businessInfoId || user.id)
+        .exec();
       if (!product) {
         throw new Error('MS007');
       }
-      return new GenericResponse(product.toJSON() as Product);
+      return new GenericResponse(product[0].toJSON() as Product);
     } catch (error) {
       throw handleError(error);
     }
   }
 
-  async create(body: CreateProductDto): Promise<GenericResponse<Product>> {
+  async create(
+    body: CreateProductDto,
+    user: User,
+  ): Promise<GenericResponse<Product>> {
     try {
       // Check for duplicate SKU if provided
       if (body.sku && body.sku.trim() !== '') {
@@ -36,6 +46,8 @@ export class ProductsService {
           .scan()
           .where('sku')
           .eq(body.sku)
+          .where('businessInfoId')
+          .eq(user.businessInfoId || user.id)
           .exec();
 
         if (existingSku && existingSku.length > 0) {
@@ -59,8 +71,8 @@ export class ProductsService {
         price: body.price || undefined,
         offerPrice: body.offerPrice || undefined,
         stock: body.stock || undefined,
-        businessInfoId: body.businessInfoId,
-        createdBy: body.createdBy,
+        businessInfoId: user.businessInfoId || user.id,
+        createdBy: user.id,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
@@ -75,6 +87,7 @@ export class ProductsService {
   async update(
     id: string,
     updateProductDto: UpdateProductDto,
+    user: User,
   ): Promise<GenericResponse<Product>> {
     try {
       // Clean the DTO first to remove undefined/null values
@@ -86,6 +99,8 @@ export class ProductsService {
           .scan()
           .where('sku')
           .eq(cleanedDto.sku)
+          .where('businessInfoId')
+          .eq(user.businessInfoId || user.id)
           .exec();
 
         if (existingSku && existingSku.length > 0) {
@@ -107,13 +122,22 @@ export class ProductsService {
     }
   }
 
-  async remove(id: string): Promise<GenericResponse<void>> {
+  async remove(id: string, user: User): Promise<GenericResponse<void>> {
     try {
-      const product = await this.model.get({ id });
-      if (!product) {
+      const product = await this.model
+        .scan()
+        .where('id')
+        .eq(id)
+        .where('businessInfoId')
+        .eq(user.businessInfoId || user.id)
+        .exec();
+      if (!product || product.length === 0) {
         throw new Error('MS007');
       }
-      await this.model.update({ id }, { status: ProductStatus.deleted });
+      await this.model.update(
+        { id },
+        { status: ProductStatus.deleted, updatedAt: new Date() },
+      );
       return new GenericResponse(undefined);
     } catch (error) {
       throw handleError(error);
@@ -123,14 +147,21 @@ export class ProductsService {
   async updateStock(
     id: string,
     quantity: number,
+    user: User,
   ): Promise<GenericResponse<Product>> {
     try {
-      const product = await this.model.get({ id });
+      const product = await this.model
+        .scan()
+        .where('id')
+        .eq(id)
+        .where('businessInfoId')
+        .eq(user.businessInfoId || user.id)
+        .exec();
       if (!product) {
         throw new Error('MS007');
       }
 
-      const currentStock = product.stock || 0;
+      const currentStock = product[0].stock || 0;
       const newStock = Math.max(0, currentStock + quantity);
 
       const updatedProduct = await this.model.update(
@@ -144,12 +175,13 @@ export class ProductsService {
     }
   }
 
-  async findAll(businessInfoId: string): Promise<GenericResponse<Product[]>> {
+  async findAll(user: User): Promise<GenericResponse<Product[]>> {
     try {
+      console.log(user);
       const products = await this.model
         .scan()
         .where('businessInfoId')
-        .eq(businessInfoId)
+        .eq(user.businessInfoId || user.id)
         .exec();
 
       return new GenericResponse(

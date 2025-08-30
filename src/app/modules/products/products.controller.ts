@@ -11,6 +11,7 @@ import { ProductsService } from './products.service';
 
 @ApiTags('Products')
 @Controller('products')
+@UseGuards(AuthGuard)
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
@@ -21,11 +22,11 @@ export class ProductsController {
     description: 'The product has been successfully created.',
     type: GenericResponse<Product>,
   })
-  @UseGuards(AuthGuard)
   async create(
     @Body() createProductDto: CreateProductDto,
+    @CurrentUser() user: User,
   ): Promise<GenericResponse<Product>> {
-    return this.productsService.create(createProductDto);
+    return this.productsService.create(createProductDto, user);
   }
 
   @Get()
@@ -35,11 +36,10 @@ export class ProductsController {
     description: 'Return all products.',
     type: GenericResponse<[Product]>,
   })
-  @UseGuards(AuthGuard)
   async findAll(
     @CurrentUser() user?: User,
   ): Promise<GenericResponse<Product[]>> {
-    return this.productsService.findAll(user?.id);
+    return this.productsService.findAll(user);
   }
 
   @Get(':id')
@@ -49,9 +49,11 @@ export class ProductsController {
     description: 'Return the product.',
     type: GenericResponse<Product>,
   })
-  @UseGuards(AuthGuard)
-  async findOne(@Param('id') id: string): Promise<GenericResponse<Product>> {
-    return this.productsService.findOne(id);
+  async findOne(
+    @Param('id') id: string,
+    @CurrentUser() user: User,
+  ): Promise<GenericResponse<Product>> {
+    return this.productsService.findOne(id, user);
   }
 
   @Patch(':id')
@@ -61,11 +63,11 @@ export class ProductsController {
     description: 'The product has been successfully updated.',
     type: GenericResponse<Product>,
   })
-  @UseGuards(AuthGuard)
   async update(
     @Param('id') id: string,
     @Body() updateProductDto: UpdateProductDto,
+    @CurrentUser() user: User,
   ): Promise<GenericResponse<Product>> {
-    return this.productsService.update(id, updateProductDto);
+    return this.productsService.update(id, updateProductDto, user);
   }
 }

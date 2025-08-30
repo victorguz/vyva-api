@@ -111,6 +111,7 @@ export class AuthService {
           isVerified: true,
           createdAt: now,
           updatedAt: now,
+          businessInfoId: uuidv4(),
         });
 
         userData = user.toJSON();
@@ -123,6 +124,7 @@ export class AuthService {
             googleId: payload.sub,
             isVerified: true,
             profilePicture: picture || userData.profilePicture,
+            businessInfoId: userData.businessInfoId ?? uuidv4(),
           });
         }
       }

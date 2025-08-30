@@ -26,7 +26,7 @@ export class CustomersController {
     @Body() createCustomerDto: CreateCustomerDto,
     @CurrentUser() user: User,
   ): Promise<GenericResponse<Customer>> {
-    return this.customersService.create(createCustomerDto, user.id);
+    return this.customersService.create(createCustomerDto, user);
   }
 
   @Get()
@@ -39,7 +39,7 @@ export class CustomersController {
   async findAll(
     @CurrentUser() user: User,
   ): Promise<GenericResponse<Customer[]>> {
-    return this.customersService.findAll(user.id);
+    return this.customersService.findAll(user);
   }
 
   @Get('count')
@@ -52,8 +52,7 @@ export class CustomersController {
   async getCustomersCount(
     @CurrentUser() user: User,
   ): Promise<GenericResponse<CustomersCountResponseDto>> {
-    const businessId = user.businessInfoId || user.id;
-    return this.customersService.getCustomersCount(businessId);
+    return this.customersService.getCustomersCount(user);
   }
 
   @Get(':id')
@@ -67,36 +66,9 @@ export class CustomersController {
     @Param('id') id: string,
     @CurrentUser() user: User,
   ): Promise<GenericResponse<Customer>> {
-    return this.customersService.findOne(id, user.id);
+    return this.customersService.findOne(id, user);
   }
 
-  @Get('by-email/:email')
-  @ApiOperation({ summary: 'Get a customer by email' })
-  @ApiResponse({
-    status: 200,
-    description: 'Return the customer.',
-    type: GenericResponse<Customer>,
-  })
-  async findOneByEmail(
-    @Param('email') email: string,
-    @CurrentUser() user: User,
-  ): Promise<GenericResponse<Customer>> {
-    return this.customersService.findOneByEmail(email, user.id);
-  }
-
-  @Get('by-user/:userId')
-  @ApiOperation({ summary: 'Get customers by user ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Return customers associated with the user.',
-    type: GenericResponse<[Customer]>,
-  })
-  async findByUserId(
-    @Param('userId') userId: string,
-    @CurrentUser() user: User,
-  ): Promise<GenericResponse<Customer[]>> {
-    return this.customersService.findByUserId(userId, user.id);
-  }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update a customer' })
@@ -110,7 +82,7 @@ export class CustomersController {
     @Body() updateCustomerDto: UpdateCustomerDto,
     @CurrentUser() user: User,
   ): Promise<GenericResponse<Customer>> {
-    return this.customersService.update(id, updateCustomerDto, user.id);
+    return this.customersService.update(id, updateCustomerDto, user);
   }
 
   @Delete(':id')
@@ -124,6 +96,6 @@ export class CustomersController {
     @Param('id') id: string,
     @CurrentUser() user: User,
   ): Promise<GenericResponse<void>> {
-    return this.customersService.remove(id, user.id);
+    return this.customersService.remove(id, user);
   }
 }

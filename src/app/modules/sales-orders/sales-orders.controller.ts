@@ -46,8 +46,9 @@ export class SalesOrdersController {
   @UseGuards(AuthGuard)
   async findAll(
     @Query() filters: ListSalesOrderDto,
+    @CurrentUser() user: User,
   ): Promise<GenericResponse<SalesOrder[]>> {
-    return this.salesOrdersService.findAll(filters);
+    return this.salesOrdersService.findAll(user, filters);
   }
 
   @Get('order-number/:orderNumber')

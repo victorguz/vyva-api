@@ -102,6 +102,7 @@ export class SalesOrdersService extends TransactionSupport {
   }
 
   async findAll(
+    user: User,
     filters?: ListSalesOrderDto,
   ): Promise<GenericResponse<SalesOrder[]>> {
     try {
@@ -115,10 +116,7 @@ export class SalesOrdersService extends TransactionSupport {
         query = query.where('idCustomer').eq(filters.idCustomer);
       }
 
-      if (filters?.businessInfoId) {
-        query = query.where('businessInfoId').eq(filters.businessInfoId);
-      }
-
+      query = query.where('businessInfoId').eq(user.businessInfoId || user.id);
       const salesOrders = await query.limit(100).exec();
       return new GenericResponse(
         salesOrders.map((order) => order as SalesOrder),
@@ -309,10 +307,10 @@ export class SalesOrdersService extends TransactionSupport {
     try {
       const startDate = moment(dateRange.startDate).startOf('day');
       const endDate = moment(dateRange.endDate).endOf('day');
-
+      console.log(startDate, endDate);
       // Calcular el período anterior con la misma duración
       const periodDuration = moment.duration(endDate.diff(startDate));
-      const previousEndDate = moment(startDate).subtract(1, 'day').endOf('day');
+      const previousEndDate = moment(startDate);
       const previousStartDate =
         moment(previousEndDate).subtract(periodDuration);
 
@@ -322,14 +320,14 @@ export class SalesOrdersService extends TransactionSupport {
         endDate.toDate(),
         businessInfoId,
       );
-
+      console.log(currentPeriodSales);
       // Obtener ventas del período anterior
       const previousPeriodSales = await this.getSalesInDateRange(
         previousStartDate.toDate(),
         previousEndDate.toDate(),
         businessInfoId,
       );
-
+      console.log(previousPeriodSales);
       // Calcular totales
       const currentValue = this.calculateTotalFromSales(currentPeriodSales);
       const lastValue = this.calculateTotalFromSales(previousPeriodSales);
