@@ -1,8 +1,6 @@
 import { Schema } from 'dynamoose';
-import {
-  MeasurementUnits,
-  ProductStatus,
-} from '../core/constants/domain.constants';
+
+import { MeasurementUnits, ProductStatus } from '../core/constants/domain.constants';
 
 export interface ProductKey {
   id: string;
@@ -17,6 +15,7 @@ export interface Product extends ProductKey {
   unit: MeasurementUnits;
   sku?: string;
   status: ProductStatus;
+  isService: boolean;
   isSubscription: boolean;
   subscriptionDays?: number;
   requireStock?: boolean;
@@ -85,6 +84,10 @@ export const ProductSchema = new Schema(
     subscriptionDays: {
       type: Number,
       required: false,
+    },
+    isService:{
+      type: Boolean,
+      required: true,
     },
     requireStock: {
       type: Boolean,

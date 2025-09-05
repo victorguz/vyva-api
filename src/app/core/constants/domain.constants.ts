@@ -52,6 +52,7 @@ export enum ProductStatus {
 
 export enum SalesOrderStatus {
   pending = 'pending',
+  partiallyPaid = 'partiallyPaid',
   paid = 'paid',
   canceled = 'canceled',
 }

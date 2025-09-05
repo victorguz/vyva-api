@@ -117,7 +117,11 @@ export const UserSchema = new Schema(
     },
     businessInfoId: {
       type: String,
-      required: false,
+      required: true,
+      index: {
+        type: 'global',
+        name: 'businessInfo-index',
+      },
     },
     data: {
       type: Object,

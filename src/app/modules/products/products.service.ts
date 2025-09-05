@@ -17,14 +17,14 @@ export class ProductsService {
     private readonly model: Model<Product, ProductKey>,
   ) {}
 
-  async findOne(id: string, user: User  ): Promise<GenericResponse<Product>> {
+  async findOne(id: string, user: User): Promise<GenericResponse<Product>> {
     try {
       const product = await this.model
         .scan()
         .where('id')
         .eq(id)
         .where('businessInfoId')
-        .eq(user.businessInfoId || user.id)
+        .eq(user.businessInfoId)
         .exec();
       if (!product) {
         throw new Error('MS007');
@@ -47,7 +47,7 @@ export class ProductsService {
           .where('sku')
           .eq(body.sku)
           .where('businessInfoId')
-          .eq(user.businessInfoId || user.id)
+          .eq(user.businessInfoId)
           .exec();
 
         if (existingSku && existingSku.length > 0) {
@@ -65,13 +65,14 @@ export class ProductsService {
         unit: body.unit,
         sku: body.sku || undefined,
         status: body.status,
+        isService: body.isService,
         isSubscription: body.isSubscription,
         subscriptionDays: body.subscriptionDays || undefined,
         requireStock: body.requireStock,
         price: body.price || undefined,
         offerPrice: body.offerPrice || undefined,
         stock: body.stock || undefined,
-        businessInfoId: user.businessInfoId || user.id,
+        businessInfoId: user.businessInfoId,
         createdBy: user.id,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -100,7 +101,7 @@ export class ProductsService {
           .where('sku')
           .eq(cleanedDto.sku)
           .where('businessInfoId')
-          .eq(user.businessInfoId || user.id)
+          .eq(user.businessInfoId)
           .exec();
 
         if (existingSku && existingSku.length > 0) {
@@ -129,7 +130,7 @@ export class ProductsService {
         .where('id')
         .eq(id)
         .where('businessInfoId')
-        .eq(user.businessInfoId || user.id)
+        .eq(user.businessInfoId)
         .exec();
       if (!product || product.length === 0) {
         throw new Error('MS007');
@@ -155,7 +156,7 @@ export class ProductsService {
         .where('id')
         .eq(id)
         .where('businessInfoId')
-        .eq(user.businessInfoId || user.id)
+        .eq(user.businessInfoId)
         .exec();
       if (!product) {
         throw new Error('MS007');
@@ -181,7 +182,7 @@ export class ProductsService {
       const products = await this.model
         .scan()
         .where('businessInfoId')
-        .eq(user.businessInfoId || user.id)
+        .eq(user.businessInfoId)
         .exec();
 
       return new GenericResponse(

@@ -124,7 +124,7 @@ export class SalesOrdersController {
     @Body() dateRangeDto: DateRangeReportDto,
     @CurrentUser() user: User,
   ): Promise<GenericResponse<SalesReportResponseDto>> {
-    const businessInfoId = user.businessInfoId || user.id;
+    const businessInfoId = user.businessInfoId;
     return this.salesOrdersService.getDailySalesCards(
       dateRangeDto,
       businessInfoId,
@@ -145,7 +145,7 @@ export class SalesOrdersController {
   async getDailyPaymentMethodsSummary(
     @CurrentUser() user: User,
   ): Promise<GenericResponse<DailyPaymentMethodsResponseDto>> {
-    const businessInfoId = user.businessInfoId || user.id;
+    const businessInfoId = user.businessInfoId;
     return this.salesOrdersService.getDailyPaymentMethodsSummary(
       businessInfoId,
     );

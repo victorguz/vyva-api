@@ -22,7 +22,7 @@ export class CustomersService {
       const customers = await this.model
         .scan()
         .where('businessId')
-        .eq(user.businessInfoId || user.id)
+        .eq(user.businessInfoId)
         .exec();
 
       return new GenericResponse(
@@ -33,10 +33,7 @@ export class CustomersService {
     }
   }
 
-  async findOne(
-    id: string,
-    user: User,
-  ): Promise<GenericResponse<Customer>> {
+  async findOne(id: string, user: User): Promise<GenericResponse<Customer>> {
     try {
       const customer = await this.model.get({ id });
       if (!customer) {
@@ -45,7 +42,7 @@ export class CustomersService {
 
       // Verify customer belongs to the business
       const customerData = customer.toJSON() as Customer;
-      if (customerData.businessId !== user.businessInfoId || user.id) {
+      if (customerData.businessId !== user.businessInfoId) {
         throw new Error('MS007'); // Not found (for security)
       }
 
@@ -65,7 +62,7 @@ export class CustomersService {
         .where('email')
         .eq(email.toLowerCase())
         .where('businessId')
-        .eq(user.businessInfoId || user.id)
+        .eq(user.businessInfoId)
         .exec();
 
       if (!customers || customers.length === 0) {
@@ -89,7 +86,7 @@ export class CustomersService {
         .where('userId')
         .eq(userId)
         .where('businessId')
-        .eq(user.businessInfoId || user.id)
+        .eq(user.businessInfoId)
         .exec();
 
       return new GenericResponse(
@@ -125,7 +122,7 @@ export class CustomersService {
         address: body.address,
         profilePicture: body.profilePicture,
         userId: body.userId,
-        businessId: user.businessInfoId || user.id, // Set businessId from current user
+        businessId: user.businessInfoId, // Set businessId from current user
         data: body.data,
         createdAt: moment().toISOString(),
         updatedAt: moment().toISOString(),
@@ -153,7 +150,7 @@ export class CustomersService {
       }
 
       const existingCustomerData = existingCustomer.toJSON() as Customer;
-      if (existingCustomerData.businessId !== user.businessInfoId || user.id) {
+      if (existingCustomerData.businessId !== user.businessInfoId) {
         throw new Error('MS007'); // Not found (for security)
       }
 
@@ -201,7 +198,7 @@ export class CustomersService {
 
       // Verify customer belongs to this business
       const customerData = customer.toJSON() as Customer;
-      if (customerData.businessId !== user.businessInfoId || user.id) {
+      if (customerData.businessId !== user.businessInfoId) {
         throw new Error('MS007'); // Not found (for security)
       }
 
@@ -221,7 +218,7 @@ export class CustomersService {
         .scan()
         .attributes(['businessId', 'createdAt'])
         .where('businessId')
-        .eq(user.businessInfoId || user.id)
+        .eq(user.businessInfoId)
         .exec();
 
       // Calcular fechas para el filtro de hoy

@@ -76,6 +76,13 @@ export class CreateProductDto {
   status?: ProductStatus = ProductStatus.draft;
 
   @ApiProperty({
+    description: 'Whether the product is a service',
+    example: true,
+  })
+  @IsBoolean()
+  isService!: boolean;
+
+  @ApiProperty({
     description: 'Whether the product is a subscription',
     example: true,
   })
@@ -129,13 +136,6 @@ export class CreateProductDto {
 }
 
 export class UpdateProductDto implements Partial<CreateProductDto> {
-  @ApiProperty({
-    description: 'Product ID',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-  })
-  @IsUUID()
-  id!: string;
-
   @ApiProperty({
     description: 'Name of the product',
     example: 'Premium Gym Membership',
@@ -210,6 +210,15 @@ export class UpdateProductDto implements Partial<CreateProductDto> {
   status?: ProductStatus;
 
   @ApiProperty({
+    description: 'Whether the product is a service',
+    example: true,
+    required: false,
+  })
+  @IsBoolean()
+  @IsOptional()
+  isService?: boolean;
+
+  @ApiProperty({
     description: 'Whether the product is a subscription',
     example: true,
     required: false,
@@ -262,8 +271,6 @@ export class UpdateProductDto implements Partial<CreateProductDto> {
   @IsNumber()
   @IsOptional()
   stock?: number;
-
-
 }
 
 export class FindProductDto {
@@ -329,7 +336,6 @@ export class ListProductDto {
   @IsIn(Object.values(ProductStatus))
   @IsOptional()
   status?: ProductStatus;
-
 }
 
 export class ProductResponseDto implements Product {
@@ -342,6 +348,7 @@ export class ProductResponseDto implements Product {
   unit: MeasurementUnits;
   sku?: string;
   status: ProductStatus;
+  isService: boolean;
   isSubscription: boolean;
   subscriptionDays?: number;
   requireStock?: boolean;

@@ -9,7 +9,7 @@ import { GenericResponse } from '../../core/interfaces/generic-response.interfac
 import { Product, ProductKey } from '../../schemas/product.schema';
 import { SalesOrder, SalesOrderKey } from '../../schemas/sales-order.schema';
 import { handleError } from '../../shared/error.functions';
-import { deleteEmptyProperties } from '../../shared/shared.functions';
+import { datePlusDays, deleteEmptyProperties } from '../../shared/shared.functions';
 import {
   CreateSalesOrderDto,
   DailyPaymentMethodsResponseDto,
@@ -42,7 +42,7 @@ export class SalesOrdersService extends TransactionSupport {
       // Fetch products from database to get accurate prices and stock info
       const productDetails = await this.fetchProductDetails(
         body.products,
-        user.businessInfoId || user.id,
+        user.businessInfoId,
       );
 
       // Calculate total amount from database product prices
@@ -53,6 +53,7 @@ export class SalesOrdersService extends TransactionSupport {
 
       // Validate stock availability for products that require stock
       this.validateStockAvailability(body.products, productDetails);
+      console.log(datePlusDays(new Date(), -74).toDate());
       const salesOrder = {
         id: uuidv4(),
         orderNumber,
@@ -61,9 +62,9 @@ export class SalesOrdersService extends TransactionSupport {
         paymentMethods: body.paymentMethods,
         totalAmount,
         status: SalesOrderStatus.paid,
-        businessInfoId: user.businessInfoId || user.id,
+        businessInfoId: user.businessInfoId,
         createdBy: user.id,
-        createdAt: new Date(),
+        createdAt: datePlusDays(new Date(), -74).toDate(),
       };
       // Create sales order using Dynamoose
       const newSalesOrder = this.model.transaction.create({
@@ -116,11 +117,12 @@ export class SalesOrdersService extends TransactionSupport {
         query = query.where('idCustomer').eq(filters.idCustomer);
       }
 
-      query = query.where('businessInfoId').eq(user.businessInfoId || user.id);
-      const salesOrders = await query.limit(100).exec();
-      return new GenericResponse(
-        salesOrders.map((order) => order as SalesOrder),
+      query = query.where('businessInfoId').eq(user.businessInfoId);
+      const salesOrders = (await query.exec()).map(
+        (order) => order as SalesOrder,
       );
+      console.log({ businessInfoId:user.businessInfoId,salesOrders });
+      return new GenericResponse(salesOrders);
     } catch (error) {
       throw handleError(error);
     }
@@ -307,7 +309,6 @@ export class SalesOrdersService extends TransactionSupport {
     try {
       const startDate = moment(dateRange.startDate).startOf('day');
       const endDate = moment(dateRange.endDate).endOf('day');
-      console.log(startDate, endDate);
       // Calcular el período anterior con la misma duración
       const periodDuration = moment.duration(endDate.diff(startDate));
       const previousEndDate = moment(startDate);
@@ -320,14 +321,12 @@ export class SalesOrdersService extends TransactionSupport {
         endDate.toDate(),
         businessInfoId,
       );
-      console.log(currentPeriodSales);
       // Obtener ventas del período anterior
       const previousPeriodSales = await this.getSalesInDateRange(
         previousStartDate.toDate(),
         previousEndDate.toDate(),
         businessInfoId,
       );
-      console.log(previousPeriodSales);
       // Calcular totales
       const currentValue = this.calculateTotalFromSales(currentPeriodSales);
       const lastValue = this.calculateTotalFromSales(previousPeriodSales);

@@ -93,14 +93,17 @@ export const SalesOrderSchema = new Schema(
       type: Number,
       required: true,
     },
+    paidAmount: {
+      type: Number,
+      required: true,
+    },
     status: {
       type: String,
       required: true,
-      default: 'pending',
     },
     businessInfoId: {
       type: String,
-      required: false,
+      required: true,
       index: {
         type: 'global',
         name: 'businessInfo-index',
