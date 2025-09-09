@@ -1,6 +1,7 @@
-import { Server } from 'http';
 import { Context } from 'aws-lambda';
 import { createServer, proxy, Response } from 'aws-serverless-express';
+import { Server } from 'http';
+
 import { createApp } from './main';
 
 const express = require('express');

@@ -1,12 +1,13 @@
 import { Module } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { AuthController } from './auth.controller';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { DynamooseModule } from 'nestjs-dynamoose';
-import { SharedModule } from 'src/app/shared/shared.module';
 import { JWT_EXPIRATION } from 'src/app/core/config/environment.config';
 import { UserSchema } from 'src/app/schemas/user.schema';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { SharedModule } from 'src/app/shared/shared.module';
+
+import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
 
 @Module({
   imports: [

@@ -120,23 +120,41 @@ export class AuthService {
 
         // Update Google ID and profile picture if not already set
         if (!userData.googleId || !userData.profilePicture) {
+          const newBusinessId = userData.businessInfoId
+            ? userData.businessInfoId
+            : uuidv4();
+
           await this.userModel.update({ id: userData.id } as UserKey, {
             googleId: payload.sub,
             isVerified: true,
             profilePicture: picture || userData.profilePicture,
-            businessInfoId: userData.businessInfoId ?? uuidv4(),
+            businessInfoId: newBusinessId,
           });
+
+          // Refresh userData after update
+          const updatedUser = await this.userModel.get({ id: userData.id });
+          userData = updatedUser.toJSON();
+        } else if (!userData.businessInfoId) {
+          // User has googleId and profilePicture but no businessInfoId
+          const newBusinessId = uuidv4();
+
+          await this.userModel.update({ id: userData.id } as UserKey, {
+            businessInfoId: newBusinessId,
+          });
+
+          // Refresh userData after update
+          const updatedUser = await this.userModel.get({ id: userData.id });
+          userData = updatedUser.toJSON();
         }
       }
-
       const { password, ...userWithoutPassword } = userData;
 
       const token = this.jwtService.sign({
         sub: userData.id,
         email: userData.email,
         role: userData.role,
+        businessInfoId: userData.businessInfoId,
       });
-
       return new GenericResponse<AuthResponse>({
         token,
         user: userWithoutPassword as UserResponse,

@@ -53,7 +53,6 @@ export class SalesOrdersService extends TransactionSupport {
 
       // Validate stock availability for products that require stock
       this.validateStockAvailability(body.products, productDetails);
-      console.log(datePlusDays(new Date(), -74).toDate());
       const salesOrder = {
         id: uuidv4(),
         orderNumber,
@@ -97,7 +96,6 @@ export class SalesOrdersService extends TransactionSupport {
       // Return the created sales order
       return new GenericResponse(salesOrderResult);
     } catch (error) {
-      console.log(error);
       throw handleError(error);
     }
   }
@@ -107,6 +105,11 @@ export class SalesOrdersService extends TransactionSupport {
     filters?: ListSalesOrderDto,
   ): Promise<GenericResponse<SalesOrder[]>> {
     try {
+      // Validate user and businessInfoId
+      if (!user || !user.businessInfoId) {
+        throw new Error('User and businessInfoId are required');
+      }
+
       let query = this.model.scan();
 
       if (filters?.orderNumber) {
@@ -121,7 +124,6 @@ export class SalesOrdersService extends TransactionSupport {
       const salesOrders = (await query.exec()).map(
         (order) => order as SalesOrder,
       );
-      console.log({ businessInfoId:user.businessInfoId,salesOrders });
       return new GenericResponse(salesOrders);
     } catch (error) {
       throw handleError(error);
@@ -130,6 +132,11 @@ export class SalesOrdersService extends TransactionSupport {
 
   async findOne(id: string): Promise<GenericResponse<SalesOrder>> {
     try {
+      // Validate id
+      if (!id) {
+        throw new Error('id is required and cannot be undefined or null');
+      }
+
       const salesOrder = await this.model.get({ id });
       if (!salesOrder) {
         throw new Error('MS007');
@@ -144,6 +151,13 @@ export class SalesOrdersService extends TransactionSupport {
     orderNumber: string,
   ): Promise<GenericResponse<SalesOrder>> {
     try {
+      // Validate orderNumber
+      if (!orderNumber) {
+        throw new Error(
+          'orderNumber is required and cannot be undefined or null',
+        );
+      }
+
       const salesOrders = await this.model
         .scan()
         .where('orderNumber')
@@ -165,6 +179,11 @@ export class SalesOrdersService extends TransactionSupport {
     updateSalesOrderDto: UpdateSalesOrderDto,
   ): Promise<GenericResponse<SalesOrder>> {
     try {
+      // Validate id
+      if (!id) {
+        throw new Error('id is required and cannot be undefined or null');
+      }
+
       // Clean the DTO first to remove undefined/null values
       const cleanedDto = deleteEmptyProperties(updateSalesOrderDto);
 
@@ -187,6 +206,14 @@ export class SalesOrdersService extends TransactionSupport {
     modifiedBy?: string,
   ): Promise<GenericResponse<SalesOrder>> {
     try {
+      // Validate id and status
+      if (!id) {
+        throw new Error('id is required and cannot be undefined or null');
+      }
+      if (!status) {
+        throw new Error('status is required and cannot be undefined or null');
+      }
+
       const updateData: any = { status };
 
       if (modifiedBy) {
@@ -208,6 +235,11 @@ export class SalesOrdersService extends TransactionSupport {
 
   async remove(id: string): Promise<GenericResponse<boolean>> {
     try {
+      // Validate id
+      if (!id) {
+        throw new Error('id is required and cannot be undefined or null');
+      }
+
       await this.model.delete({ id });
       return new GenericResponse(true);
     } catch (error) {
@@ -307,6 +339,13 @@ export class SalesOrdersService extends TransactionSupport {
     businessInfoId: string,
   ): Promise<GenericResponse<SalesReportResponseDto>> {
     try {
+      // Validate businessInfoId
+      if (!businessInfoId) {
+        throw new Error(
+          'businessInfoId is required and cannot be undefined or null',
+        );
+      }
+
       const startDate = moment(dateRange.startDate).startOf('day');
       const endDate = moment(dateRange.endDate).endOf('day');
       // Calcular el período anterior con la misma duración
@@ -355,6 +394,13 @@ export class SalesOrdersService extends TransactionSupport {
     businessInfoId: string,
   ): Promise<SalesOrder[]> {
     try {
+      // Validate businessInfoId is not undefined or null
+      if (!businessInfoId) {
+        throw new Error(
+          'businessInfoId is required and cannot be undefined or null',
+        );
+      }
+
       // Primero obtener todas las ventas del negocio y filtrar en memoria
       // Esto evita problemas con tipos de datos en DynamoDB
       const allSalesOrders = await this.model
@@ -404,6 +450,13 @@ export class SalesOrdersService extends TransactionSupport {
     businessInfoId: string,
   ): Promise<GenericResponse<DailyPaymentMethodsResponseDto>> {
     try {
+      // Validate businessInfoId
+      if (!businessInfoId) {
+        throw new Error(
+          'businessInfoId is required and cannot be undefined or null',
+        );
+      }
+
       // Obtener todas las órdenes del día actual para el negocio
       const today = moment().startOf('day');
       const endOfDay = moment().endOf('day');
