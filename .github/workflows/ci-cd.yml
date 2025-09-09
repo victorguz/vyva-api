@@ -15,13 +15,11 @@ jobs:
         with:
           node-version: 18.13.0
       - name: Installing dependencies
-        run: npm i
+        run: npm ci
       - name: Building
         run: npm run build --if-present
-      - name: Set AWS credentials
-        run: |
-          echo "Exporting AWS credentials for Serverless..."
-          export AWS_ACCESS_KEY_ID=${{ secrets.AWS_IAM_KEY }}
-          export AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_IAM_SECRET }}
       - name: Deploy with serverless
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_IAM_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_IAM_SECRET }}
         run: npx serverless deploy --stage ${{ github.ref_name }}
