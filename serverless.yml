@@ -81,8 +81,8 @@ functions:
       ACCESS_KEY_ID: ${ssm:ACCESS_KEY_ID}
       SECRET_ACCESS_KEY: ${ssm:SECRET_ACCESS_KEY}
       REGION: ${ssm:REGION}
-      GOOGLE_CLIENT_ID: ${ssm:GOOGLE_CLIENT_ID}
-      GOOGLE_CLIENT_SECRET: ${ssm:GOOGLE_CLIENT_SECRET}
+      GOOGLE_CLIENT_ID: ${ssm:GOOGLE_CLIENT_ID_${upper(${self:provider.stage})}}
+      GOOGLE_CLIENT_SECRET: ${ssm:GOOGLE_CLIENT_SECRET_${upper(${self:provider.stage})}}
 plugins:
   - serverless-deployment-bucket
   - serverless-stage-manager

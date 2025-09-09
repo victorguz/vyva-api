@@ -1,13 +1,7 @@
 import { ConfigModuleOptions } from '@nestjs/config';
-import * as Joi from 'joi';
 import { plainToInstance } from 'class-transformer';
-import {
-  IsBoolean,
-  IsEnum,
-  IsNumber,
-  IsString,
-  validateSync,
-} from 'class-validator';
+import { IsBoolean, IsEnum, IsNumber, IsString, validateSync } from 'class-validator';
+import * as Joi from 'joi';
 
 export enum Environment {
   Development = 'dev',
@@ -83,6 +77,12 @@ export class EnvironmentVariables {
 
   @IsString()
   REGION: string;
+
+  @IsString()
+  GOOGLE_CLIENT_ID: string;
+
+  @IsString()
+  GOOGLE_CLIENT_SECRET: string;
 }
 const validationSchema = Joi.object({
   NODE_ENV: Joi.string(),
@@ -106,6 +106,8 @@ const validationSchema = Joi.object({
   ACCESS_KEY_ID: Joi.string().required(),
   SECRET_ACCESS_KEY: Joi.string().required(),
   REGION: Joi.string().required(),
+  GOOGLE_CLIENT_ID: Joi.string().required(),
+  GOOGLE_CLIENT_SECRET: Joi.string().required(),
 });
 function validate(config: Record<string, unknown>) {
   const validatedConfig = plainToInstance(EnvironmentVariables, config, {
