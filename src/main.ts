@@ -1,18 +1,13 @@
-import { Express, json, urlencoded } from 'express';
-import { NestFactory, Reflector } from '@nestjs/core';
-import {
-  ClassSerializerInterceptor,
-  INestApplication,
-  ValidationPipe,
-} from '@nestjs/common';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import * as requestIp from 'request-ip';
-import {
-  ExpressAdapter,
-  NestExpressApplication,
-} from '@nestjs/platform-express';
-import { AppModule } from './app/app.module';
 import 'reflect-metadata';
+
+import { ClassSerializerInterceptor, INestApplication, ValidationPipe } from '@nestjs/common';
+import { NestFactory, Reflector } from '@nestjs/core';
+import { ExpressAdapter, NestExpressApplication } from '@nestjs/platform-express';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { Express, json, urlencoded } from 'express';
+import * as requestIp from 'request-ip';
+
+import { AppModule } from './app/app.module';
 
 const cors = {
   origin: getOrigin(),
@@ -24,7 +19,7 @@ const cors = {
 function getOrigin() {
   switch (process.env.NODE_ENV) {
     case 'prd':
-      return 'https://vyva.solaradev.com';
+      return 'https://app.vyvapos.com';
     case 'dev':
     case 'qas':
     default:
