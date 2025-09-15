@@ -16,6 +16,7 @@ import {
   DateRangeReportDto,
   ListSalesOrderDto,
   PaymentMethodSummaryDto,
+  SalesOrderPaymentMethodDto,
   SalesReportResponseDto,
   UpdateSalesOrderDto,
 } from './dto/sales-orders.dto';
@@ -50,7 +51,7 @@ export class SalesOrdersService extends TransactionSupport {
         body.products,
         productDetails,
       );
-
+const paidAmount = this.calculatePaidAmount(body.paymentMethods);
       // Validate stock availability for products that require stock
       this.validateStockAvailability(body.products, productDetails);
       const salesOrder = {
@@ -59,8 +60,9 @@ export class SalesOrdersService extends TransactionSupport {
         idCustomer: body.idCustomer,
         products: body.products,
         paymentMethods: body.paymentMethods,
+        paidAmount,
         totalAmount,
-        status: SalesOrderStatus.paid,
+        status: paidAmount === 0 ? SalesOrderStatus.pending : paidAmount === totalAmount ? SalesOrderStatus.paid : SalesOrderStatus.partiallyPaid,
         businessInfoId: user.businessInfoId,
         createdBy: user.id,
         createdAt: datePlusDays(new Date(), -74).toDate(),
@@ -294,6 +296,12 @@ export class SalesOrdersService extends TransactionSupport {
 
       const price = product.offerPrice ?? product.price ?? 0;
       return total + price * orderProduct.quantity;
+    }, 0);
+  }
+
+  private calculatePaidAmount(paymentMethods: SalesOrderPaymentMethodDto[]): number {
+    return paymentMethods.reduce((acc, item) => {
+      return acc + item.value;
     }, 0);
   }
 
