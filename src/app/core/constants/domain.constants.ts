@@ -33,6 +33,8 @@ export enum MeasurementUnits {
   cm = 'cm',
   m = 'm',
   day = 'day',
+  minute = 'minute',
+  hour = 'hour',
 }
 
 export enum MembershipDurations {
