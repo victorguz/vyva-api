@@ -4,6 +4,7 @@ import { DynamooseModule } from 'nestjs-dynamoose';
 
 import { dynamooseConfig } from './core/config/dynamoose.config';
 import { configModuleOptions } from './core/config/environment.config';
+import { AppointmentsModule } from './modules/appointments/appointments.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CustomersModule } from './modules/customers/customers.module';
 import { ProductsModule } from './modules/products/products.module';
@@ -26,6 +27,7 @@ import { UsersModule } from './modules/users/users.module';
     ProductsModule,
     ProfileModule,
     SalesOrdersModule,
+    AppointmentsModule,
   ],
 })
 export class AppModule {}

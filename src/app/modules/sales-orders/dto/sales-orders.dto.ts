@@ -30,6 +30,10 @@ export class SalesOrderItemDto implements SalesOrderItem {
   @IsBoolean()
   @IsOptional()
   isSubscription?: boolean;
+  @ApiProperty({ description: 'Product is service' })
+  @IsBoolean()
+  @IsOptional()
+  isService?: boolean;
 
   @ApiProperty({ description: 'Product price' })
   @IsNumber()
@@ -76,6 +80,14 @@ export class CreateSalesOrderDto {
   @Type(() => SalesOrderPaymentMethodDto)
   @IsNotEmpty()
   paymentMethods: SalesOrderPaymentMethodDto[];
+
+  @IsDateString()
+  @IsOptional()
+  startDate?: Date;
+
+  @IsDateString()
+  @IsOptional()
+  endDate?: Date;
 }
 
 export class UpdateSalesOrderDto {

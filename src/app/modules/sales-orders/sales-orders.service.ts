@@ -1,15 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import * as moment from 'moment';
 import { InjectModel, Model, TransactionSupport } from 'nestjs-dynamoose';
-import { PaymentMethodType, SalesOrderStatus } from 'src/app/core/constants/domain.constants';
+import { AppointmentStatus, PaymentMethodType, SalesOrderStatus } from 'src/app/core/constants/domain.constants';
+import { Appointment, AppointmentKey } from 'src/app/schemas/appointment.schema';
 import { User } from 'src/app/schemas/user.schema';
+import { deleteEmptyProperties } from 'src/app/shared/shared.functions';
 import { v4 as uuidv4 } from 'uuid';
 
 import { GenericResponse } from '../../core/interfaces/generic-response.interface';
 import { Product, ProductKey } from '../../schemas/product.schema';
 import { SalesOrder, SalesOrderKey } from '../../schemas/sales-order.schema';
 import { handleError } from '../../shared/error.functions';
-import { datePlusDays, deleteEmptyProperties } from '../../shared/shared.functions';
 import {
   CreateSalesOrderDto,
   DailyPaymentMethodsResponseDto,
@@ -28,6 +29,8 @@ export class SalesOrdersService extends TransactionSupport {
     private readonly model: Model<SalesOrder, SalesOrderKey>,
     @InjectModel('Product')
     private readonly productModel: Model<Product, ProductKey>,
+    @InjectModel('Appointment')
+    private readonly appointmentModel: Model<Appointment, AppointmentKey>,
   ) {
     super();
   }
@@ -51,7 +54,7 @@ export class SalesOrdersService extends TransactionSupport {
         body.products,
         productDetails,
       );
-const paidAmount = this.calculatePaidAmount(body.paymentMethods);
+      const paidAmount = this.calculatePaidAmount(body.paymentMethods);
       // Validate stock availability for products that require stock
       this.validateStockAvailability(body.products, productDetails);
       const salesOrder = {
@@ -62,16 +65,34 @@ const paidAmount = this.calculatePaidAmount(body.paymentMethods);
         paymentMethods: body.paymentMethods,
         paidAmount,
         totalAmount,
-        status: paidAmount === 0 ? SalesOrderStatus.pending : paidAmount === totalAmount ? SalesOrderStatus.paid : SalesOrderStatus.partiallyPaid,
+        status:
+          paidAmount === 0
+            ? SalesOrderStatus.pending
+            : paidAmount === totalAmount
+            ? SalesOrderStatus.paid
+            : SalesOrderStatus.partiallyPaid,
         businessInfoId: user.businessInfoId,
         createdBy: user.id,
-        createdAt: datePlusDays(new Date(), -74).toDate(),
       };
       // Create sales order using Dynamoose
       const newSalesOrder = this.model.transaction.create({
         ...salesOrder,
       });
-
+      let appointment = null;
+      if (body.startDate && body.endDate && body.products[0].isService) {
+        appointment = this.appointmentModel.transaction.create({
+          id: uuidv4(),
+          idOrder: salesOrder.id,
+          idCustomer: body.idCustomer,
+          idEmployee: body.idCustomer,
+          idService: body.products[0].id,
+          startDate: new Date(body.startDate),
+          endDate: new Date(body.endDate),
+          status: AppointmentStatus.pending,
+          businessInfoId: user.businessInfoId,
+          createdBy: user.id,
+        });
+      }
       // Update product stock for products that require stock management
       const stockUpdates = [];
       for (const orderProduct of body.products) {
@@ -92,7 +113,7 @@ const paidAmount = this.calculatePaidAmount(body.paymentMethods);
         }
       }
 
-      await this.transaction([newSalesOrder, ...stockUpdates]);
+      await this.transaction([newSalesOrder, ...stockUpdates, appointment]);
 
       const salesOrderResult = await this.model.get({ id: salesOrder.id });
       // Return the created sales order
@@ -299,7 +320,9 @@ const paidAmount = this.calculatePaidAmount(body.paymentMethods);
     }, 0);
   }
 
-  private calculatePaidAmount(paymentMethods: SalesOrderPaymentMethodDto[]): number {
+  private calculatePaidAmount(
+    paymentMethods: SalesOrderPaymentMethodDto[],
+  ): number {
     return paymentMethods.reduce((acc, item) => {
       return acc + item.value;
     }, 0);

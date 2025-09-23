@@ -58,3 +58,9 @@ export enum SalesOrderStatus {
   paid = 'paid',
   canceled = 'canceled',
 }
+
+export enum AppointmentStatus {
+  pending = 'pending',
+  confirmed = 'confirmed',
+  canceled = 'canceled',
+}

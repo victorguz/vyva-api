@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { DynamooseModule } from 'nestjs-dynamoose';
+import { AppointmentSchema } from 'src/app/schemas/appointment.schema';
 
 import { ProductSchema } from '../../schemas/product.schema';
 import { SalesOrderSchema } from '../../schemas/sales-order.schema';
@@ -23,6 +24,13 @@ import { SalesOrdersService } from './sales-orders.service';
         schema: ProductSchema,
         options: {
           tableName: 'products',
+        },
+      },
+      {
+        name: 'Appointment',
+        schema: AppointmentSchema,
+        options: {
+          tableName: 'appointments',
         },
       },
     ]),

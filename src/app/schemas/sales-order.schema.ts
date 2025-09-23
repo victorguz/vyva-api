@@ -10,7 +10,7 @@ export interface SalesOrderKey {
 export interface SalesOrderItem {
   id: string;
   quantity: number;
-  isSubscription?: boolean;
+  isService?: boolean;
   price: number;
   offerPrice?: number;
 }
@@ -65,7 +65,7 @@ export const SalesOrderSchema = new Schema(
           schema: {
             id: { type: String, required: true },
             quantity: { type: Number, required: true },
-            isSubscription: { type: Boolean, required: true },
+            isService: { type: Boolean, required: true },
             price: { type: Number, required: true },
             offerPrice: { type: Number, required: false },
           },
