@@ -80,7 +80,6 @@ export class ProductsService {
 
       return new GenericResponse(newProduct.toJSON() as Product);
     } catch (error) {
-      console.log(error);
       throw handleError(error);
     }
   }
@@ -178,7 +177,6 @@ export class ProductsService {
 
   async findAll(user: User): Promise<GenericResponse<Product[]>> {
     try {
-      console.log(user);
       const products = await this.model
         .scan()
         .where('businessInfoId')
