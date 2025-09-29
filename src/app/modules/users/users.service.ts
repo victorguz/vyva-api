@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel, Model } from 'nestjs-dynamoose';
-import { User, UserKey } from '../../schemas/user.schema';
-import { CreateUserDto, UpdateUserDto } from './dto/users.dto';
-import { handleError } from '../../shared/error.functions';
 import { v4 as uuidv4 } from 'uuid';
+
 import { GenericResponse } from '../../core/interfaces/generic-response.interface';
+import { User, UserKey } from '../../schemas/user.schema';
+import { handleError } from '../../shared/error.functions';
 import { encrypt } from '../../shared/shared.functions';
+import { CreateUserDto, UpdateUserDto } from './dto/users.dto';
 
 @Injectable()
 export class UsersService {

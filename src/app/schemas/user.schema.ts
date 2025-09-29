@@ -26,6 +26,7 @@ export interface User extends UserKey {
   businessInfoId?: string;
   data?: any;
   isVerified?: boolean;
+  apiKey?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -79,6 +80,10 @@ export const UserSchema = new Schema(
       required: false,
     },
     epaycoCustomerId: {
+      type: String,
+      required: false,
+    },
+    apiKey: {
       type: String,
       required: false,
     },

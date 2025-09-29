@@ -1,11 +1,9 @@
 import { Body, Controller, Post, UseGuards } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import {
-  GoogleSignInDto,
-  RefreshTokenRequest,
-} from './dtos/auth.dto';
-import { AuthGuard } from 'src/app/modules/auth/guards/auth.guard';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { AuthGuard } from 'src/app/modules/auth/guards/auth.guard';
+
+import { AuthService } from './auth.service';
+import { GoogleSignInDto, RefreshTokenRequest } from './dtos/auth.dto';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -24,4 +22,5 @@ export class AuthController {
   async refreshToken(@Body() body: RefreshTokenRequest) {
     return this.authService.refreshToken(body);
   }
+
 }

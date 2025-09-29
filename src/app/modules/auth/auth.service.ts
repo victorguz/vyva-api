@@ -123,12 +123,13 @@ export class AuthService {
           const newBusinessId = userData.businessInfoId
             ? userData.businessInfoId
             : uuidv4();
-
+          const newApiKey = userData.apiKey ? userData.apiKey : encrypt(uuidv4());
           await this.userModel.update({ id: userData.id } as UserKey, {
             googleId: payload.sub,
             isVerified: true,
             profilePicture: picture || userData.profilePicture,
             businessInfoId: newBusinessId,
+            apiKey: newApiKey,
           });
 
           // Refresh userData after update
@@ -140,6 +141,15 @@ export class AuthService {
 
           await this.userModel.update({ id: userData.id } as UserKey, {
             businessInfoId: newBusinessId,
+          });
+
+          // Refresh userData after update
+          const updatedUser = await this.userModel.get({ id: userData.id });
+          userData = updatedUser.toJSON();
+        }else if (!userData.apiKey) {
+          const newApiKey = encrypt(uuidv4());
+          await this.userModel.update({ id: userData.id } as UserKey, {
+            apiKey: newApiKey,
           });
 
           // Refresh userData after update
@@ -163,6 +173,7 @@ export class AuthService {
       throw handleError(error);
     }
   }
+
 
   // Removed code-exchange flow; we only accept ID tokens at /public/google
 }
