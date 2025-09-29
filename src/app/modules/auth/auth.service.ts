@@ -123,7 +123,9 @@ export class AuthService {
           const newBusinessId = userData.businessInfoId
             ? userData.businessInfoId
             : uuidv4();
-          const newApiKey = userData.apiKey ? userData.apiKey : encrypt(uuidv4());
+          const newApiKey = userData.apiKey
+            ? userData.apiKey
+            : encrypt(uuidv4());
           await this.userModel.update({ id: userData.id } as UserKey, {
             googleId: payload.sub,
             isVerified: true,
@@ -146,7 +148,7 @@ export class AuthService {
           // Refresh userData after update
           const updatedUser = await this.userModel.get({ id: userData.id });
           userData = updatedUser.toJSON();
-        }else if (!userData.apiKey) {
+        } else if (!userData.apiKey) {
           const newApiKey = encrypt(uuidv4());
           await this.userModel.update({ id: userData.id } as UserKey, {
             apiKey: newApiKey,
@@ -174,6 +176,27 @@ export class AuthService {
     }
   }
 
-
+  async loginWithApiKey(apiKey: string): Promise<GenericResponse<AuthResponse>> {
+    try {
+      const user = await this.userModel.scan().where('apiKey').eq(apiKey).exec();
+      if (!user || user.length === 0) {
+        throw new Error('MS016');
+      }
+      const userData = user[0].toJSON();
+      const { password, ...userWithoutPassword } = userData;
+      const token = this.jwtService.sign({
+        sub: userData.id,
+        email: userData.email,
+        role: userData.role,
+        businessInfoId: userData.businessInfoId,
+      });
+      return new GenericResponse<AuthResponse>({
+        token,
+        user: userWithoutPassword as UserResponse,
+      });
+    } catch (error) {
+      throw handleError(error);
+    }
+  }
   // Removed code-exchange flow; we only accept ID tokens at /public/google
 }

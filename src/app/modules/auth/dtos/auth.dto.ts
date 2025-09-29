@@ -1,16 +1,6 @@
-import {
-  IsEmail,
-  IsNumber,
-  IsOptional,
-  IsString,
-  MaxLength,
-  IsNotEmpty,
-} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  maxEmailLength,
-  maxNameLength,
-} from 'src/app/core/constants/generic.constants';
+import { IsEmail, IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength } from 'class-validator';
+import { maxEmailLength, maxNameLength } from 'src/app/core/constants/generic.constants';
 
 export class AuthRequestDto {
   @IsString()
@@ -35,6 +25,12 @@ export class RefreshTokenRequest {
 
   @IsNumber()
   idCompany: number;
+}
+
+export class LoginWithApiKeyDto {
+  @IsString()
+  @IsNotEmpty()
+  apiKey: string;
 }
 
 export class AuthUser {
