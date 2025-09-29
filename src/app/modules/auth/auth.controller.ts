@@ -23,7 +23,7 @@ export class AuthController {
     return this.authService.refreshToken(body);
   }
 
-  @Post('loginWithApiKey')
+  @Post('public/loginWithApiKey')
   @ApiOperation({ summary: 'Login with API key' })
   async loginWithApiKey(@Body() body: LoginWithApiKeyDto) {
     return this.authService.loginWithApiKey(body.apiKey);
