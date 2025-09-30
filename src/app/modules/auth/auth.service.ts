@@ -182,7 +182,7 @@ export class AuthService {
       if (!userApiKey || userApiKey.length === 0) {
         throw new Error('MS016');
       }
-      const user = await this.userModel.scan().where('email').eq(email).exec();
+      const user = await this.userModel.scan().where('email').eq(email.toLowerCase()).exec();
       if (!user || user.length === 0) {
         throw new Error('MS016');
       }
