@@ -176,9 +176,13 @@ export class AuthService {
     }
   }
 
-  async loginWithApiKey(apiKey: string): Promise<GenericResponse<AuthResponse>> {
+  async loginWithApiKey(email: string, apiKey: string): Promise<GenericResponse<AuthResponse>> {
     try {
-      const user = await this.userModel.scan().where('apiKey').eq(apiKey).exec();
+      const userApiKey = await this.userModel.scan().where('apiKey').eq(apiKey).exec();
+      if (!userApiKey || userApiKey.length === 0) {
+        throw new Error('MS016');
+      }
+      const user = await this.userModel.scan().where('email').eq(email).exec();
       if (!user || user.length === 0) {
         throw new Error('MS016');
       }
