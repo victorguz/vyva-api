@@ -26,7 +26,7 @@ export class AuthController {
   @Post('public/loginWithApiKey')
   @ApiOperation({ summary: 'Login with API key' })
   async loginWithApiKey(@Body() body: LoginWithApiKeyDto) {
-    return this.authService.loginWithApiKey(body.email, body.apiKey);
+    return this.authService.loginWithApiKey(body.phone, body.apiKey);
   }
 
 }

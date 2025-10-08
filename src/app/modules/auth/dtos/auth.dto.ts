@@ -30,7 +30,7 @@ export class RefreshTokenRequest {
 export class LoginWithApiKeyDto {
   @IsString()
   @IsNotEmpty()
-  email: string;
+  phone: string;
 
   @IsString()
   @IsNotEmpty()
