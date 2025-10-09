@@ -79,13 +79,13 @@ export class AppointmentsService extends TransactionSupport {
         query = query.where('idEmployee').eq(filters.idEmployee);
       }
 
-      if (filters?.idService) {
-        query = query.where('idService').eq(filters.idService);
-      }
+      // if (filters?.idService) {
+      //   query = query.where('idService').eq(filters.idService);
+      // }
 
-      if (filters?.idOrder) {
-        query = query.where('idOrder').eq(filters.idOrder);
-      }
+      // if (filters?.idOrder) {
+      //   query = query.where('idOrder').eq(filters.idOrder);
+      // }
 
       if (filters?.status) {
         query = query.where('status').eq(filters.status);

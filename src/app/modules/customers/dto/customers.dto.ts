@@ -15,6 +15,13 @@ import {
 import { maxEmailLength } from '../../../core/constants/generic.constants';
 import { Customer } from '../../../schemas/customer.schema';
 
+export class ListCustomerDto {
+  @ApiProperty({ description: 'Name of the customer' })
+  @IsString()
+  @IsOptional()
+  name?: string;
+}
+
 export class CreateCustomerDto {
   @ApiProperty({
     description: 'First name of the customer',

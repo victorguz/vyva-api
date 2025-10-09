@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { User } from 'src/app/schemas/user.schema';
 
@@ -7,7 +7,7 @@ import { Customer } from '../../schemas/customer.schema';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { CustomersService } from './customers.service';
-import { CreateCustomerDto, CustomersCountResponseDto, UpdateCustomerDto } from './dto/customers.dto';
+import { CreateCustomerDto, CustomersCountResponseDto, ListCustomerDto, UpdateCustomerDto } from './dto/customers.dto';
 
 @ApiTags('Customers')
 @Controller('customers')
@@ -38,8 +38,9 @@ export class CustomersController {
   })
   async findAll(
     @CurrentUser() user: User,
+    @Query() queryParams?: ListCustomerDto,
   ): Promise<GenericResponse<Customer[]>> {
-    return this.customersService.findAll(user);
+    return this.customersService.findAll(queryParams,user);
   }
 
   @Get('count')

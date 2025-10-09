@@ -103,12 +103,12 @@ export class ListAppointmentDto {
   @ApiProperty({ description: 'Service ID filter' })
   @IsString()
   @IsOptional()
-  idService?: string;
+  serviceName?: string;
 
   @ApiProperty({ description: 'Order ID filter' })
   @IsString()
   @IsOptional()
-  idOrder?: string;
+  orderNumber?: string;
 
   @ApiProperty({
     description: 'Status filter',

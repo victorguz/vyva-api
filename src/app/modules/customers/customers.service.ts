@@ -8,7 +8,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { GenericResponse } from '../../core/interfaces/generic-response.interface';
 import { Customer, CustomerKey } from '../../schemas/customer.schema';
 import { handleError } from '../../shared/error.functions';
-import { CreateCustomerDto, CustomersCountResponseDto, UpdateCustomerDto } from './dto/customers.dto';
+import { CreateCustomerDto, CustomersCountResponseDto, ListCustomerDto, UpdateCustomerDto } from './dto/customers.dto';
 
 @Injectable()
 export class CustomersService {
@@ -17,10 +17,22 @@ export class CustomersService {
     private readonly model: Model<Customer, CustomerKey>,
   ) {}
 
-  async findAll(user: User): Promise<GenericResponse<Customer[]>> {
+  async findAll(
+    queryParams: ListCustomerDto,
+    user: User,
+  ): Promise<GenericResponse<Customer[]>> {
     try {
-      const customers = await this.model
-        .scan()
+      let query = this.model.scan();
+
+      if(queryParams.name) {
+        query = query.where('firstName')
+        .contains(queryParams.name)
+        .or()
+        .where('lastName')
+        .contains(queryParams.name)
+      }
+      
+      const customers = await query
         .where('businessId')
         .eq(user.businessInfoId)
         .exec();
