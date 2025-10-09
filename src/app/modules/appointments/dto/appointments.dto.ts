@@ -127,11 +127,6 @@ export class ListAppointmentDto {
   @IsDateString()
   @IsOptional()
   endDate?: string;
-
-  @ApiProperty({ description: 'Business info ID filter' })
-  @IsString()
-  @IsOptional()
-  businessInfoId?: string;
 }
 
 export class UpdateAppointmentStatusDto {
