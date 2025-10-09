@@ -95,25 +95,12 @@ export class AppointmentsService extends TransactionSupport {
       query = query.where('businessInfoId').eq(user.businessInfoId);
 
       // Apply date range filters
-      if (filters?.startDateFrom || filters?.startDateTo) {
-        const appointments = await query.exec();
-        let filteredAppointments = appointments as Appointment[];
+      if (filters?.startDate) {
+        query = query.where('startDate').ge(filters.startDate);
+      }
 
-        if (filters.startDateFrom) {
-          const fromDate = new Date(filters.startDateFrom);
-          filteredAppointments = filteredAppointments.filter(
-            (appointment) => new Date(appointment.startDate) >= fromDate,
-          );
-        }
-
-        if (filters.startDateTo) {
-          const toDate = new Date(filters.startDateTo);
-          filteredAppointments = filteredAppointments.filter(
-            (appointment) => new Date(appointment.startDate) <= toDate,
-          );
-        }
-
-        return new GenericResponse(filteredAppointments);
+      if (filters?.endDate) {
+        query = query.where('endDate').le(filters.endDate);
       }
 
       const appointments = (await query.exec()).map(

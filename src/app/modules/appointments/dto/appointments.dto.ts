@@ -121,12 +121,12 @@ export class ListAppointmentDto {
   @ApiProperty({ description: 'Start date filter (ISO 8601 format)' })
   @IsDateString()
   @IsOptional()
-  startDateFrom?: string;
+  startDate?: string;
 
   @ApiProperty({ description: 'End date filter (ISO 8601 format)' })
   @IsDateString()
   @IsOptional()
-  startDateTo?: string;
+  endDate?: string;
 
   @ApiProperty({ description: 'Business info ID filter' })
   @IsString()
