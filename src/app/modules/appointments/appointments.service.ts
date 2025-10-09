@@ -96,11 +96,11 @@ export class AppointmentsService extends TransactionSupport {
 
       // Apply date range filters
       if (filters?.startDate) {
-        query = query.where('startDate').ge(filters.startDate);
+        query = query.where('startDate').ge(new Date(filters.startDate).getTime());
       }
 
       if (filters?.endDate) {
-        query = query.where('endDate').le(filters.endDate);
+        query = query.where('endDate').le(new Date(filters.endDate).getTime());
       }
 
       const appointments = (await query.exec()).map(
