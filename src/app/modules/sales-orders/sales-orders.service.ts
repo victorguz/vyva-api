@@ -4,7 +4,6 @@ import { InjectModel, Model, TransactionSupport } from 'nestjs-dynamoose';
 import { AppointmentStatus, PaymentMethodType, SalesOrderStatus } from 'src/app/core/constants/domain.constants';
 import { Appointment, AppointmentKey } from 'src/app/schemas/appointment.schema';
 import { User } from 'src/app/schemas/user.schema';
-import { deleteEmptyProperties } from 'src/app/shared/shared.functions';
 import { v4 as uuidv4 } from 'uuid';
 
 import { GenericResponse } from '../../core/interfaces/generic-response.interface';
@@ -19,7 +18,6 @@ import {
   PaymentMethodSummaryDto,
   SalesOrderPaymentMethodDto,
   SalesReportResponseDto,
-  UpdateSalesOrderDto,
 } from './dto/sales-orders.dto';
 
 @Injectable()
@@ -94,26 +92,26 @@ export class SalesOrdersService extends TransactionSupport {
         });
       }
       // Update product stock for products that require stock management
-      const stockUpdates = [];
-      for (const orderProduct of body.products) {
-        const product = productDetails.get(orderProduct.id);
-        if (product && product.requireStock) {
-          const newStock = Math.max(
-            0,
-            (product.stock ?? 0) - orderProduct.quantity,
-          );
-          stockUpdates.push(
-            this.productModel.transaction.update(
-              { id: orderProduct.id },
-              {
-                stock: newStock,
-              },
-            ),
-          );
-        }
-      }
+      // const stockUpdates = [];
+      // for (const orderProduct of body.products) {
+      //   const product = productDetails.get(orderProduct.id);
+      //   if (product && product.requireStock) {
+      //     const newStock = Math.max(
+      //       0,
+      //       (product.stock ?? 0) - orderProduct.quantity,
+      //     );
+      //     stockUpdates.push(
+      //       this.productModel.transaction.update(
+      //         { id: orderProduct.id },
+      //         {
+      //           stock: newStock,
+      //         },
+      //       ),
+      //     );
+      //   }
+      // }
 
-      await this.transaction([newSalesOrder, ...stockUpdates, appointment]);
+      await this.transaction([newSalesOrder, appointment]);
 
       const salesOrderResult = await this.model.get({ id: salesOrder.id });
       // Return the created sales order
@@ -197,74 +195,16 @@ export class SalesOrdersService extends TransactionSupport {
     }
   }
 
-  async update(
-    id: string,
-    updateSalesOrderDto: UpdateSalesOrderDto,
-  ): Promise<GenericResponse<SalesOrder>> {
+  async remove(id: string): Promise<GenericResponse<SalesOrder>> {
     try {
       // Validate id
       if (!id) {
         throw new Error('id is required and cannot be undefined or null');
       }
 
-      // Clean the DTO first to remove undefined/null values
-      const cleanedDto = deleteEmptyProperties(updateSalesOrderDto);
-
-      await this.model.update({ id }, cleanedDto);
+      await this.model.update({ id }, { status: SalesOrderStatus.canceled });
       const updatedSalesOrder = await this.model.get({ id });
-
-      if (!updatedSalesOrder) {
-        throw new Error('MS007');
-      }
-
-      return new GenericResponse(updatedSalesOrder as SalesOrder);
-    } catch (error) {
-      throw handleError(error);
-    }
-  }
-
-  async updateStatus(
-    id: string,
-    status: string,
-    modifiedBy?: string,
-  ): Promise<GenericResponse<SalesOrder>> {
-    try {
-      // Validate id and status
-      if (!id) {
-        throw new Error('id is required and cannot be undefined or null');
-      }
-      if (!status) {
-        throw new Error('status is required and cannot be undefined or null');
-      }
-
-      const updateData: any = { status };
-
-      if (modifiedBy) {
-        updateData.modifiedBy = modifiedBy;
-      }
-
-      await this.model.update({ id }, updateData);
-      const updatedSalesOrder = await this.model.get({ id });
-
-      if (!updatedSalesOrder) {
-        throw new Error('MS007');
-      }
-
-      return new GenericResponse(updatedSalesOrder as SalesOrder);
-    } catch (error) {
-      throw handleError(error);
-    }
-  }
-
-  async remove(id: string): Promise<GenericResponse<boolean>> {
-    try {
-      // Validate id
-      if (!id) {
-        throw new Error('id is required and cannot be undefined or null');
-      }
-
-      await this.model.delete({ id });
-      return new GenericResponse(true);
+      return new GenericResponse(updatedSalesOrder);
     } catch (error) {
       throw handleError(error);
     }

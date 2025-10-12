@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { GenericResponse } from '../../core/interfaces/generic-response.interface';
@@ -10,9 +10,9 @@ import {
   CreateSalesOrderDto,
   DailyPaymentMethodsResponseDto,
   DateRangeReportDto,
+  DeleteSalesOrderDto,
   ListSalesOrderDto,
   SalesReportResponseDto,
-  UpdateSalesOrderDto,
 } from './dto/sales-orders.dto';
 import { SalesOrdersService } from './sales-orders.service';
 
@@ -65,51 +65,18 @@ export class SalesOrdersController {
     return this.salesOrdersService.findByOrderNumber(orderNumber);
   }
 
-  @Patch(':id')
-  @ApiOperation({ summary: 'Update a sales order' })
-  @ApiResponse({
-    status: 200,
-    description: 'The sales order has been successfully updated.',
-    type: GenericResponse<SalesOrder>,
-  })
-  @UseGuards(AuthGuard)
-  async update(
-    @Param('id') id: string,
-    @Body() updateSalesOrderDto: UpdateSalesOrderDto,
-    @CurrentUser() user?: User,
-  ): Promise<GenericResponse<SalesOrder>> {
-    if (user) {
-      updateSalesOrderDto.modifiedBy = user.id;
-    }
-    return this.salesOrdersService.update(id, updateSalesOrderDto);
-  }
-
-  @Patch(':id/status')
-  @ApiOperation({ summary: 'Update sales order status' })
-  @ApiResponse({
-    status: 200,
-    description: 'The sales order status has been successfully updated.',
-    type: GenericResponse<SalesOrder>,
-  })
-  @UseGuards(AuthGuard)
-  async updateStatus(
-    @Param('id') id: string,
-    @Body() body: { status: string },
-    @CurrentUser() user?: User,
-  ): Promise<GenericResponse<SalesOrder>> {
-    return this.salesOrdersService.updateStatus(id, body.status, user?.id);
-  }
-
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a sales order' })
   @ApiResponse({
     status: 200,
     description: 'The sales order has been successfully deleted.',
-    type: GenericResponse<boolean>,
+    type: GenericResponse<SalesOrder>,
   })
   @UseGuards(AuthGuard)
-  async remove(@Param('id') id: string): Promise<GenericResponse<boolean>> {
-    return this.salesOrdersService.remove(id);
+  async remove(
+    @Param() params: DeleteSalesOrderDto,
+  ): Promise<GenericResponse<SalesOrder>> {
+    return this.salesOrdersService.remove(params.id);
   }
 
   @Post('daily-sales-cards')

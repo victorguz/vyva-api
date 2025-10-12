@@ -102,6 +102,13 @@ export class UpdateSalesOrderDto {
   modifiedBy?: string;
 }
 
+export class DeleteSalesOrderDto {
+  @ApiProperty({ description: 'Sales order ID' })
+  @IsString()
+  @IsNotEmpty()
+  id: string;
+}
+
 export class ListSalesOrderDto {
   @ApiProperty({ description: 'Order number' })
   @IsString()
