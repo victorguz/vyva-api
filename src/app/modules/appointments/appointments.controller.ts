@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { GenericResponse } from '../../core/interfaces/generic-response.interface';
@@ -108,7 +108,7 @@ export class AppointmentsController {
     return this.appointmentsService.findOne(id);
   }
 
-  @Patch(':id')
+  @Put(':id')
   @ApiOperation({ summary: 'Update an appointment' })
   @ApiResponse({
     status: 200,
@@ -124,7 +124,7 @@ export class AppointmentsController {
     if (user) {
       updateAppointmentDto.modifiedBy = user.id;
     }
-    return this.appointmentsService.update(id, updateAppointmentDto);
+    return this.appointmentsService.update(id, updateAppointmentDto, user);
   }
 
   @Patch(':id/status')

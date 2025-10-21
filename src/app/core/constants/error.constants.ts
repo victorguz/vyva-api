@@ -41,6 +41,9 @@ export enum ERROR_MESSAGES {
   MS038 = 'El registro no se puede actualizar.',
   MS039 = 'El negocio no existe.',
   MS040 = 'El establecimiento no existe.',
+  MS041 = 'La fecha de inicio debe ser anterior a la fecha de fin.',
+  MS042 = 'El formato de la fecha no es válido.',
+  MS043 = 'La fecha de fin debe ser posterior a la fecha de inicio.',
 }
 
 export const HANDLED_ERRORS: {

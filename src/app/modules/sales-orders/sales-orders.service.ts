@@ -18,6 +18,7 @@ import {
   PaymentMethodSummaryDto,
   SalesOrderPaymentMethodDto,
   SalesReportResponseDto,
+  UpdateSalesOrderDto,
 } from './dto/sales-orders.dto';
 
 @Injectable()
@@ -38,6 +39,7 @@ export class SalesOrdersService extends TransactionSupport {
     user: User,
   ): Promise<GenericResponse<SalesOrder>> {
     try {
+      const transactions = [];
       // Generate unique order number
       const orderNumber = this.generateOrderNumber();
 
@@ -76,6 +78,7 @@ export class SalesOrdersService extends TransactionSupport {
       const newSalesOrder = this.model.transaction.create({
         ...salesOrder,
       });
+      transactions.push(newSalesOrder);
       let appointment = null;
       if (body.startDate && body.endDate && body.products[0].isService) {
         appointment = this.appointmentModel.transaction.create({
@@ -90,32 +93,44 @@ export class SalesOrdersService extends TransactionSupport {
           businessInfoId: user.businessInfoId,
           createdBy: user.id,
         });
+        transactions.push(appointment);
       }
-      // Update product stock for products that require stock management
-      // const stockUpdates = [];
-      // for (const orderProduct of body.products) {
-      //   const product = productDetails.get(orderProduct.id);
-      //   if (product && product.requireStock) {
-      //     const newStock = Math.max(
-      //       0,
-      //       (product.stock ?? 0) - orderProduct.quantity,
-      //     );
-      //     stockUpdates.push(
-      //       this.productModel.transaction.update(
-      //         { id: orderProduct.id },
-      //         {
-      //           stock: newStock,
-      //         },
-      //       ),
-      //     );
-      //   }
-      // }
 
-      await this.transaction([newSalesOrder, appointment]);
+      await this.transaction([...transactions]);
 
       const salesOrderResult = await this.model.get({ id: salesOrder.id });
       // Return the created sales order
       return new GenericResponse(salesOrderResult);
+    } catch (error) {
+      throw handleError(error);
+    }
+  }
+
+  async update(
+    id: string,
+    body: UpdateSalesOrderDto,
+    user: User,
+  ): Promise<GenericResponse<SalesOrder>> {
+    try {
+      const salesOrderResult = await this.model
+        .scan()
+        .where('id')
+        .eq(id)
+        .where('businessInfoId')
+        .eq(user.businessInfoId)
+        .exec();
+
+      if (!salesOrderResult || salesOrderResult.length === 0) {
+        throw new Error('MS007');
+      }
+
+      const salesOrder = salesOrderResult[0];
+
+      const updatedSalesOrder = await this.model.update(
+        { id: salesOrder.id },
+        { ...body, modifiedBy: user.id },
+      );
+      return new GenericResponse(updatedSalesOrder);
     } catch (error) {
       throw handleError(error);
     }
@@ -128,7 +143,7 @@ export class SalesOrdersService extends TransactionSupport {
     try {
       // Validate user and businessInfoId
       if (!user || !user.businessInfoId) {
-        throw new Error('User and businessInfoId are required');
+        throw new Error('MS014');
       }
 
       let query = this.model.scan();
@@ -155,7 +170,7 @@ export class SalesOrdersService extends TransactionSupport {
     try {
       // Validate id
       if (!id) {
-        throw new Error('id is required and cannot be undefined or null');
+        throw new Error('MS014');
       }
 
       const salesOrder = await this.model.get({ id });
@@ -174,9 +189,7 @@ export class SalesOrdersService extends TransactionSupport {
     try {
       // Validate orderNumber
       if (!orderNumber) {
-        throw new Error(
-          'orderNumber is required and cannot be undefined or null',
-        );
+        throw new Error('MS014');
       }
 
       const salesOrders = await this.model
@@ -199,7 +212,7 @@ export class SalesOrdersService extends TransactionSupport {
     try {
       // Validate id
       if (!id) {
-        throw new Error('id is required and cannot be undefined or null');
+        throw new Error('MS014');
       }
 
       await this.model.update({ id }, { status: SalesOrderStatus.canceled });
@@ -220,23 +233,19 @@ export class SalesOrdersService extends TransactionSupport {
       try {
         const productDetail = await this.productModel.get({ id: product.id });
         if (!productDetail) {
-          throw new Error(`Product with ID ${product.id} not found`);
+          throw new Error('MS007');
         }
 
         const productData = productDetail.toJSON() as Product;
 
         // Verify product belongs to the same business
         if (productData.businessInfoId !== businessInfoId) {
-          throw new Error(
-            `Product ${product.id} does not belong to your business`,
-          );
+          throw new Error('MS014');
         }
 
         productMap.set(product.id, productData);
       } catch (error) {
-        throw new Error(
-          `Failed to fetch product ${product.id}: ${error.message}`,
-        );
+        throw handleError(error);
       }
     }
 
@@ -250,9 +259,7 @@ export class SalesOrdersService extends TransactionSupport {
     return orderProducts.reduce((total, orderProduct) => {
       const product = productDetails.get(orderProduct.id);
       if (!product) {
-        throw new Error(
-          `Product ${orderProduct.id} not found in product details`,
-        );
+        throw new Error('MS007');
       }
 
       const price = product.offerPrice ?? product.price ?? 0;
@@ -275,15 +282,13 @@ export class SalesOrdersService extends TransactionSupport {
     for (const orderProduct of orderProducts) {
       const product = productDetails.get(orderProduct.id);
       if (!product) {
-        throw new Error(`Product ${orderProduct.id} not found`);
+        throw new Error('MS007');
       }
 
       if (product.requireStock) {
         const currentStock = product.stock ?? 0;
         if (currentStock < orderProduct.quantity) {
-          throw new Error(
-            `Insufficient stock for product ${product.name}. Available: ${currentStock}, Required: ${orderProduct.quantity}`,
-          );
+          throw new Error('MS010');
         }
       }
     }
@@ -298,13 +303,6 @@ export class SalesOrdersService extends TransactionSupport {
       .padStart(4, '0')}`;
   }
 
-  private calculateTotalAmount(products: any[]): number {
-    return products.reduce((total, product) => {
-      const price = product.offerPrice ?? product.price;
-      return total + price * product.quantity;
-    }, 0);
-  }
-
   async getDailySalesCards(
     dateRange: DateRangeReportDto,
     businessInfoId: string,
@@ -312,9 +310,7 @@ export class SalesOrdersService extends TransactionSupport {
     try {
       // Validate businessInfoId
       if (!businessInfoId) {
-        throw new Error(
-          'businessInfoId is required and cannot be undefined or null',
-        );
+        throw new Error('MS014');
       }
 
       const startDate = moment(dateRange.startDate).startOf('day');
@@ -367,9 +363,7 @@ export class SalesOrdersService extends TransactionSupport {
     try {
       // Validate businessInfoId is not undefined or null
       if (!businessInfoId) {
-        throw new Error(
-          'businessInfoId is required and cannot be undefined or null',
-        );
+        throw new Error('MS014');
       }
 
       // Primero obtener todas las ventas del negocio y filtrar en memoria
@@ -388,7 +382,7 @@ export class SalesOrdersService extends TransactionSupport {
 
       return filteredOrders.map((order) => order as SalesOrder);
     } catch (error) {
-      throw new Error(`Error fetching sales orders: ${error.message}`);
+      throw handleError(error);
     }
   }
 
@@ -423,9 +417,7 @@ export class SalesOrdersService extends TransactionSupport {
     try {
       // Validate businessInfoId
       if (!businessInfoId) {
-        throw new Error(
-          'businessInfoId is required and cannot be undefined or null',
-        );
+        throw new Error('MS014');
       }
 
       // Obtener todas las órdenes del día actual para el negocio

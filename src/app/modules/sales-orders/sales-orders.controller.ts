@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { GenericResponse } from '../../core/interfaces/generic-response.interface';
@@ -13,6 +13,7 @@ import {
   DeleteSalesOrderDto,
   ListSalesOrderDto,
   SalesReportResponseDto,
+  UpdateSalesOrderDto,
 } from './dto/sales-orders.dto';
 import { SalesOrdersService } from './sales-orders.service';
 
@@ -116,5 +117,21 @@ export class SalesOrdersController {
     return this.salesOrdersService.getDailyPaymentMethodsSummary(
       businessInfoId,
     );
+  }
+
+  @Put(':id')
+  @ApiOperation({ summary: 'Update a sales order' })
+  @ApiResponse({
+    status: 200,
+    description: 'The sales order has been successfully updated.',
+    type: GenericResponse<SalesOrder>,
+  })
+  @UseGuards(AuthGuard)
+  async update(
+    @Param('id') id: string,
+    @Body() body: UpdateSalesOrderDto,
+    @CurrentUser() user: User,
+  ): Promise<GenericResponse<SalesOrder>> {
+    return this.salesOrdersService.update(id, body, user);
   }
 }

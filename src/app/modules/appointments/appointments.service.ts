@@ -65,7 +65,7 @@ export class AppointmentsService extends TransactionSupport {
     try {
       // Validate user and businessInfoId
       if (!user || !user.businessInfoId) {
-        throw new Error('User and businessInfoId are required');
+        throw new Error('MS014');
       }
 
       let query = this.model.scan();
@@ -96,7 +96,9 @@ export class AppointmentsService extends TransactionSupport {
 
       // Apply date range filters
       if (filters?.startDate) {
-        query = query.where('startDate').ge(new Date(filters.startDate).getTime());
+        query = query
+          .where('startDate')
+          .ge(new Date(filters.startDate).getTime());
       }
 
       if (filters?.endDate) {
@@ -116,7 +118,7 @@ export class AppointmentsService extends TransactionSupport {
     try {
       // Validate id
       if (!id) {
-        throw new Error('id is required and cannot be undefined or null');
+        throw new Error('MS014');
       }
 
       const appointment = await this.model.get({ id });
@@ -136,7 +138,7 @@ export class AppointmentsService extends TransactionSupport {
     try {
       // Validate idOrder
       if (!idOrder) {
-        throw new Error('idOrder is required and cannot be undefined or null');
+        throw new Error('MS014');
       }
 
       const appointments = await this.model
@@ -160,9 +162,7 @@ export class AppointmentsService extends TransactionSupport {
     try {
       // Validate idCustomer
       if (!idCustomer) {
-        throw new Error(
-          'idCustomer is required and cannot be undefined or null',
-        );
+        throw new Error('MS014');
       }
 
       const appointments = await this.model
@@ -186,9 +186,7 @@ export class AppointmentsService extends TransactionSupport {
     try {
       // Validate idEmployee
       if (!idEmployee) {
-        throw new Error(
-          'idEmployee is required and cannot be undefined or null',
-        );
+        throw new Error('MS014');
       }
 
       const appointments = await this.model
@@ -208,11 +206,12 @@ export class AppointmentsService extends TransactionSupport {
   async update(
     id: string,
     updateAppointmentDto: UpdateAppointmentDto,
+    user: User,
   ): Promise<GenericResponse<Appointment>> {
     try {
       // Validate id
       if (!id) {
-        throw new Error('id is required and cannot be undefined or null');
+        throw new Error('MS014');
       }
 
       // Clean the DTO first to remove undefined/null values
@@ -223,6 +222,18 @@ export class AppointmentsService extends TransactionSupport {
         this.validateAppointmentDates(cleanedDto.startDate, cleanedDto.endDate);
       }
 
+      const appointmentResult = await this.model
+        .scan()
+        .where('id')
+        .eq(id)
+        .where('businessInfoId')
+        .eq(user.businessInfoId)
+        .exec();
+      if (!appointmentResult || appointmentResult.length === 0) {
+        throw new Error('MS007');
+      }
+      const appointment = appointmentResult[0];
+
       // Convert date strings to Date objects if provided
       if (cleanedDto.startDate) {
         cleanedDto.startDate = new Date(cleanedDto.startDate) as any;
@@ -231,7 +242,7 @@ export class AppointmentsService extends TransactionSupport {
         cleanedDto.endDate = new Date(cleanedDto.endDate) as any;
       }
 
-      await this.model.update({ id }, cleanedDto);
+      await this.model.update({ id: appointment.id }, cleanedDto);
       const updatedAppointment = await this.model.get({ id });
 
       if (!updatedAppointment) {
@@ -251,10 +262,10 @@ export class AppointmentsService extends TransactionSupport {
     try {
       // Validate id and status
       if (!id) {
-        throw new Error('id is required and cannot be undefined or null');
+        throw new Error('MS014');
       }
       if (!updateStatusDto.status) {
-        throw new Error('status is required and cannot be undefined or null');
+        throw new Error('MS014');
       }
 
       const updateData: any = { status: updateStatusDto.status };
@@ -296,15 +307,15 @@ export class AppointmentsService extends TransactionSupport {
     const now = new Date();
 
     if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-      throw new Error('Invalid date format provided');
+      throw new Error('MS042');
     }
 
     if (start >= end) {
-      throw new Error('Start date must be before end date');
+      throw new Error('MS041');
     }
 
     if (start < now) {
-      throw new Error('Cannot create appointments in the past');
+      throw new Error('MS043');
     }
   }
 }

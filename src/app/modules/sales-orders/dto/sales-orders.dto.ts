@@ -4,6 +4,7 @@ import {
   IsArray,
   IsBoolean,
   IsDateString,
+  IsIn,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -11,7 +12,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 
-import { PaymentMethodType } from '../../../core/constants/domain.constants';
+import { PaymentMethodType, SalesOrderStatus } from '../../../core/constants/domain.constants';
 import { DashboardSingleCardItem } from '../../../interfaces/dashboard.interface';
 import { SalesOrderItem } from '../../../schemas/sales-order.schema';
 
@@ -91,15 +92,32 @@ export class CreateSalesOrderDto {
 }
 
 export class UpdateSalesOrderDto {
-  @ApiProperty({ description: 'Order status' })
-  @IsString()
-  @IsOptional()
-  status?: string;
+  @ApiProperty({ description: 'Products to sell', type: [SalesOrderItemDto] })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => SalesOrderItemDto)
+  @IsNotEmpty()
+  products: SalesOrderItemDto[];
 
-  @ApiProperty({ description: 'Modified by user ID' })
-  @IsString()
+  @ApiProperty({
+    description: 'Payment methods',
+    type: [SalesOrderPaymentMethodDto],
+  })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => SalesOrderPaymentMethodDto)
+  @IsNotEmpty()
+  paymentMethods: SalesOrderPaymentMethodDto[];
+
+  @ApiProperty({ description: 'Order status' })
+  @IsIn(Object.values(SalesOrderStatus))
   @IsOptional()
-  modifiedBy?: string;
+  status: SalesOrderStatus = SalesOrderStatus.pending;
+
+  @ApiProperty({ description: 'Customer ID' })
+  @IsString()
+  @IsNotEmpty()
+  idCustomer: string;
 }
 
 export class DeleteSalesOrderDto {
