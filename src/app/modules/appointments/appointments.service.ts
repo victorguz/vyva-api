@@ -304,7 +304,6 @@ export class AppointmentsService extends TransactionSupport {
   private validateAppointmentDates(startDate: string, endDate: string): void {
     const start = new Date(startDate);
     const end = new Date(endDate);
-    const now = new Date();
 
     if (isNaN(start.getTime()) || isNaN(end.getTime())) {
       throw new Error('MS042');
@@ -312,10 +311,6 @@ export class AppointmentsService extends TransactionSupport {
 
     if (start >= end) {
       throw new Error('MS041');
-    }
-
-    if (start < now) {
-      throw new Error('MS043');
     }
   }
 }

@@ -127,7 +127,7 @@ export class AppointmentsController {
     return this.appointmentsService.update(id, updateAppointmentDto, user);
   }
 
-  @Patch(':id/status')
+  @Patch(':id')
   @ApiOperation({ summary: 'Update appointment status' })
   @ApiResponse({
     status: 200,

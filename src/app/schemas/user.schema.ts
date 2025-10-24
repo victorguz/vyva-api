@@ -6,11 +6,11 @@ export interface UserKey {
 
 export interface User extends UserKey {
   firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-  role: string;
-  status: boolean;
+  lastName?: string;
+  email?: string;
+  password?: string;
+  role?: string;
+  status?: boolean;
   documentType?: string;
   documentNumber?: string;
   phone?: string;
@@ -23,10 +23,10 @@ export interface User extends UserKey {
   address?: string;
   googleId?: string;
   profilePicture?: string;
-  businessInfoId?: string;
+  businessInfoId: string;
   data?: any;
   isVerified?: boolean;
-  apiKey?: string;
+  apiKey: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -45,10 +45,12 @@ export const UserSchema = new Schema(
     lastName: {
       type: String,
       required: false,
+      default: '',
     },
     email: {
       type: String,
-      required: true,
+      required: false,
+      default: '',
       index: {
         type: 'global',
         name: 'email-index',
@@ -56,14 +58,18 @@ export const UserSchema = new Schema(
     },
     password: {
       type: String,
+      required: false,
+      default: '',
     },
     role: {
       type: String,
+      required: false,
+      default: '',
     },
     status: {
       type: Boolean,
       default: true,
-      required: true,
+      required: false,
     },
     documentType: {
       type: String,
@@ -78,14 +84,16 @@ export const UserSchema = new Schema(
     phone: {
       type: String,
       required: false,
+      default: '',
     },
     epaycoCustomerId: {
       type: String,
       required: false,
+      default: '',
     },
     apiKey: {
       type: String,
-      required: false,
+      required: true,
     },
     typePerson: {
       type: String,
@@ -95,30 +103,37 @@ export const UserSchema = new Schema(
     gender: {
       type: String,
       required: false,
+      default: '',
     },
     dateOfBirth: {
       type: String,
       required: false,
+      default: '',
     },
     country: {
       type: String,
       required: false,
+      default: '',
     },
     city: {
       type: String,
       required: false,
+      default: '',
     },
     address: {
       type: String,
       required: false,
+      default: '',
     },
     googleId: {
       type: String,
       required: false,
+      default: '',
     },
     profilePicture: {
       type: String,
       required: false,
+      default: '',
     },
     businessInfoId: {
       type: String,

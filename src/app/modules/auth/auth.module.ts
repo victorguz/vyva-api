@@ -6,12 +6,14 @@ import { JWT_EXPIRATION } from 'src/app/core/config/environment.config';
 import { UserSchema } from 'src/app/schemas/user.schema';
 import { SharedModule } from 'src/app/shared/shared.module';
 
+import { UsersModule } from '../users/users.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 
 @Module({
   imports: [
     SharedModule,
+    UsersModule,
     ConfigModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],

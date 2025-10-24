@@ -9,7 +9,7 @@ export enum ERROR_MESSAGES {
   MS006 = 'Por favor, ingresa al menos un nombre o número de identificación para realizar la búsqueda.',
   MS007 = 'No se encontró ningún registro con los datos proporcionados.',
   MS008 = 'No hay información nueva para actualizar.',
-  MS009 = 'El nombre de la membresía ya está registrado.',
+  MS009 = '',
   MS010 = 'Stock insuficiente para este producto.',
   MS011 = 'Solo puedes anular esta transacción una vez.',
   MS012 = 'Este ítem no es de tipo "Membresía".',
@@ -18,7 +18,7 @@ export enum ERROR_MESSAGES {
   MS015 = 'Este "link" ya está en uso. Recuerda que debe ser único para cada negocio.',
   MS016 = 'El usuario no está registrado.',
   MS017 = 'Usuario o contraseña incorrectos.',
-  MS018 = '',
+  MS018 = 'Tu sesión ha expirado, por favor inicia sesión nuevamente.',
   MS019 = 'No tienes permisos para acceder a esta sección.',
   MS020 = 'Por favor, ingresa un nombre.',
   MS021 = 'Este usuario no tiene suscripciones activas.',
@@ -43,7 +43,6 @@ export enum ERROR_MESSAGES {
   MS040 = 'El establecimiento no existe.',
   MS041 = 'La fecha de inicio debe ser anterior a la fecha de fin.',
   MS042 = 'El formato de la fecha no es válido.',
-  MS043 = 'La fecha de fin debe ser posterior a la fecha de inicio.',
 }
 
 export const HANDLED_ERRORS: {

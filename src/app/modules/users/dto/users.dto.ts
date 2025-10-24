@@ -1,26 +1,22 @@
+import { ApiProperty } from '@nestjs/swagger';
 import {
   IsBoolean,
   IsDateString,
   IsEmail,
+  IsIn,
   IsInt,
   IsNotEmpty,
   IsNumberString,
+  IsObject,
   IsOptional,
   IsPhoneNumber,
   IsPositive,
   IsString,
   MaxLength,
-  IsIn,
-  IsObject,
 } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
-import {
-  maxEmailLength,
-  maxGenericCharacters,
-  maxNameLength,
-} from '../../../core/constants/generic.constants';
 import { UserRole } from 'src/app/core/constants/domain.constants';
-import { User } from '../../../schemas/user.schema';
+
+import { maxEmailLength, maxGenericCharacters, maxNameLength } from '../../../core/constants/generic.constants';
 
 // NOTE: BusinessInfo has been moved to its own module in src/app/modules/business-info
 // User entity now references BusinessInfo via businessInfoId
@@ -39,7 +35,7 @@ export class CreateUserDto {
     example: 'Doe',
   })
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   lastName?: string;
 
   @ApiProperty({
@@ -47,15 +43,16 @@ export class CreateUserDto {
     example: 'john.doe@example.com',
   })
   @IsEmail()
-  @IsNotEmpty()
+  @IsOptional()
   email?: string;
 
   @ApiProperty({
     description: 'Password of the user',
     example: 'password123',
+    required: false,
   })
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   password?: string;
 
   @ApiProperty({
@@ -63,7 +60,7 @@ export class CreateUserDto {
     example: 'DNI',
   })
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   documentType?: string;
 
   @ApiProperty({
@@ -71,7 +68,7 @@ export class CreateUserDto {
     example: '12345678',
   })
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   documentNumber?: string;
 
   @ApiProperty({
@@ -317,6 +314,33 @@ export class UpdateUserDto {
   @IsBoolean()
   @IsOptional()
   status?: boolean;
+
+  @ApiProperty({
+    description: 'Google ID of the user',
+    example: '123456789012345678901',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  googleId?: string;
+
+  @ApiProperty({
+    description: 'Is verified',
+    example: true,
+    required: false,
+  })
+  @IsBoolean()
+  @IsOptional()
+  isVerified?: boolean;
+
+  @ApiProperty({
+    description: 'Profile picture URL of the user',
+    example: 'https://lh3.googleusercontent.com/a/profile-picture-url',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  profilePicture?: string;
 }
 
 export class FindOneUserDto {
@@ -395,7 +419,7 @@ export class GetUsersForAuthenticateDto {
   documentNumber: string | null;
 }
 
-export class UserResponseDto implements User {
+export class UserResponseDto {
   id: string;
   firstName: string;
   lastName: string;
