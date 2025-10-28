@@ -81,14 +81,6 @@ export class CreateSalesOrderDto {
   @Type(() => SalesOrderPaymentMethodDto)
   @IsNotEmpty()
   paymentMethods: SalesOrderPaymentMethodDto[];
-
-  @IsDateString()
-  @IsOptional()
-  startDate?: Date;
-
-  @IsDateString()
-  @IsOptional()
-  endDate?: Date;
 }
 
 export class UpdateSalesOrderDto {

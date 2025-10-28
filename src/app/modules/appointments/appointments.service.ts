@@ -29,30 +29,28 @@ export class AppointmentsService extends TransactionSupport {
     user: User,
   ): Promise<GenericResponse<Appointment>> {
     try {
-      // Validate dates
-      this.validateAppointmentDates(body.startDate, body.endDate);
+      let appointment: Appointment | null = null;
+      if (body.startDate && body.endDate) {
+        appointment = (await this.model.create({
+          id: uuidv4(),
+          startDate: new Date(body.startDate),
+          endDate: new Date(body.endDate),
+          idService: body.idService,
+          idCustomer: body.idCustomer,
+          idEmployee: body.idEmployee,
+          idOrder: body.idOrder,
+          status: AppointmentStatus.pending,
+          businessInfoId: user.businessInfoId,
+          createdBy: user.id,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })) as Appointment;
+      }
 
-      const appointment = {
-        id: uuidv4(),
-        startDate: new Date(body.startDate),
-        endDate: new Date(body.endDate),
-        idService: body.idService,
-        idCustomer: body.idCustomer,
-        idEmployee: body.idEmployee,
-        idOrder: body.idOrder,
-        status: body.status || AppointmentStatus.pending,
-        businessInfoId: user.businessInfoId,
-        createdBy: user.id,
-      };
-
-      const newAppointment = this.model.transaction.create({
-        ...appointment,
-      });
-
-      await this.transaction([newAppointment]);
 
       const appointmentResult = await this.model.get({ id: appointment.id });
-      return new GenericResponse(appointmentResult as Appointment);
+      // Return the created appointment
+      return new GenericResponse(appointmentResult);
     } catch (error) {
       throw handleError(error);
     }
@@ -83,9 +81,9 @@ export class AppointmentsService extends TransactionSupport {
       //   query = query.where('idService').eq(filters.idService);
       // }
 
-      // if (filters?.idOrder) {
-      //   query = query.where('idOrder').eq(filters.idOrder);
-      // }
+      if (filters?.idOrder) {
+        query = query.where('idOrder').eq(filters.idOrder);
+      }
 
       if (filters?.status) {
         query = query.where('status').eq(filters.status);
@@ -109,95 +107,6 @@ export class AppointmentsService extends TransactionSupport {
         (appointment) => appointment as Appointment,
       );
       return new GenericResponse(appointments);
-    } catch (error) {
-      throw handleError(error);
-    }
-  }
-
-  async findOne(id: string): Promise<GenericResponse<Appointment>> {
-    try {
-      // Validate id
-      if (!id) {
-        throw new Error('MS014');
-      }
-
-      const appointment = await this.model.get({ id });
-      if (!appointment) {
-        throw new Error('MS007');
-      }
-      return new GenericResponse(appointment as Appointment);
-    } catch (error) {
-      throw handleError(error);
-    }
-  }
-
-  async findByOrderId(
-    idOrder: string,
-    user: User,
-  ): Promise<GenericResponse<Appointment[]>> {
-    try {
-      // Validate idOrder
-      if (!idOrder) {
-        throw new Error('MS014');
-      }
-
-      const appointments = await this.model
-        .scan()
-        .where('idOrder')
-        .eq(idOrder)
-        .where('businessInfoId')
-        .eq(user.businessInfoId)
-        .exec();
-
-      return new GenericResponse(appointments as Appointment[]);
-    } catch (error) {
-      throw handleError(error);
-    }
-  }
-
-  async findByCustomerId(
-    idCustomer: string,
-    user: User,
-  ): Promise<GenericResponse<Appointment[]>> {
-    try {
-      // Validate idCustomer
-      if (!idCustomer) {
-        throw new Error('MS014');
-      }
-
-      const appointments = await this.model
-        .scan()
-        .where('idCustomer')
-        .eq(idCustomer)
-        .where('businessInfoId')
-        .eq(user.businessInfoId)
-        .exec();
-
-      return new GenericResponse(appointments as Appointment[]);
-    } catch (error) {
-      throw handleError(error);
-    }
-  }
-
-  async findByEmployeeId(
-    idEmployee: string,
-    user: User,
-  ): Promise<GenericResponse<Appointment[]>> {
-    try {
-      // Validate idEmployee
-      if (!idEmployee) {
-        throw new Error('MS014');
-      }
-
-      const appointments = await this.model
-        .scan()
-        .where('idEmployee')
-        .eq(idEmployee)
-        .where('businessInfoId')
-        .eq(user.businessInfoId)
-        .exec();
-
-      return new GenericResponse(appointments as Appointment[]);
     } catch (error) {
       throw handleError(error);
     }

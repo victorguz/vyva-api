@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import * as moment from 'moment';
 import { InjectModel, Model, TransactionSupport } from 'nestjs-dynamoose';
-import { AppointmentStatus, PaymentMethodType, SalesOrderStatus } from 'src/app/core/constants/domain.constants';
+import { PaymentMethodType, SalesOrderStatus } from 'src/app/core/constants/domain.constants';
 import { Appointment, AppointmentKey } from 'src/app/schemas/appointment.schema';
 import { User } from 'src/app/schemas/user.schema';
 import { v4 as uuidv4 } from 'uuid';
@@ -79,22 +79,6 @@ export class SalesOrdersService extends TransactionSupport {
         ...salesOrder,
       });
       transactions.push(newSalesOrder);
-      let appointment = null;
-      if (body.startDate && body.endDate && body.products[0].isService) {
-        appointment = this.appointmentModel.transaction.create({
-          id: uuidv4(),
-          idOrder: salesOrder.id,
-          idCustomer: body.idCustomer,
-          idEmployee: body.idCustomer,
-          idService: body.products[0].id,
-          startDate: new Date(body.startDate),
-          endDate: new Date(body.endDate),
-          status: AppointmentStatus.pending,
-          businessInfoId: user.businessInfoId,
-          createdBy: user.id,
-        });
-        transactions.push(appointment);
-      }
 
       await this.transaction([...transactions]);
 

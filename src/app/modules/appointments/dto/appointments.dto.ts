@@ -26,12 +26,12 @@ export class CreateAppointmentDto {
 
   @ApiProperty({ description: 'Employee ID' })
   @IsString()
-  @IsNotEmpty()
-  idEmployee: string;
+  @IsOptional()
+  idEmployee?: string;
 
   @ApiProperty({ description: 'Order ID' })
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   idOrder: string;
 
   @ApiProperty({
@@ -90,6 +90,11 @@ export class UpdateAppointmentDto {
 }
 
 export class ListAppointmentDto {
+  @ApiProperty({ description: 'Order ID filter' })
+  @IsString()
+  @IsOptional()
+idOrder?: string;
+  
   @ApiProperty({ description: 'Customer ID filter' })
   @IsString()
   @IsOptional()
