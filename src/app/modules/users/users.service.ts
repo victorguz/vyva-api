@@ -7,7 +7,7 @@ import { GenericResponse } from '../../core/interfaces/generic-response.interfac
 import { User, UserKey } from '../../schemas/user.schema';
 import { handleError } from '../../shared/error.functions';
 import { encrypt } from '../../shared/shared.functions';
-import { CreateUserDto, UpdateUserDto } from './dto/users.dto';
+import { CreateGoogleUserDto, CreateUserDto, UpdateGoogleUserDto, UpdateUserDto } from './dto/users.dto';
 
 @Injectable()
 export class UsersService {
@@ -16,9 +16,13 @@ export class UsersService {
     private readonly model: Model<User, UserKey>,
   ) {}
 
-  async findAll(): Promise<GenericResponse<User[]>> {
+  async findAll(currentUser: User): Promise<GenericResponse<User[]>> {
     try {
-      const users = await this.model.scan().exec();
+      const users = await this.model
+        .scan()
+        .where('businessInfoId')
+        .eq(currentUser.businessInfoId)
+        .exec();
       return new GenericResponse(
         users.map((user) => {
           const userData = user.toJSON() as User;
@@ -31,13 +35,19 @@ export class UsersService {
     }
   }
 
-  async findOne(id: string): Promise<GenericResponse<User>> {
+  async findOne(id: string, currentUser: User): Promise<GenericResponse<User>> {
     try {
-      const user = await this.model.get({ id });
-      if (!user) {
+      const user = await this.model
+        .scan()
+        .where('id')
+        .eq(id)
+        .where('businessInfoId')
+        .eq(currentUser.businessInfoId)
+        .exec();
+      if (!user || user.length === 0) {
         throw new Error('MS007');
       }
-      const userData = user.toJSON() as User;
+      const userData = user[0].toJSON() as User;
       delete userData.password;
       return new GenericResponse(userData);
     } catch (error) {
@@ -45,12 +55,17 @@ export class UsersService {
     }
   }
 
-  async findOneByEmail(email: string): Promise<GenericResponse<User>> {
+  async findOneByEmail(
+    email: string,
+    currentUser: User,
+  ): Promise<GenericResponse<User>> {
     try {
       const users = await this.model
         .scan()
         .where('email')
         .eq(email.toLowerCase())
+        .where('businessInfoId')
+        .eq(currentUser.businessInfoId)
         .exec();
 
       if (!users || users.length === 0) {
@@ -65,7 +80,10 @@ export class UsersService {
     }
   }
 
-  async create(body: CreateUserDto): Promise<GenericResponse<User>> {
+  async create(
+    body: CreateUserDto,
+    currentUser: User,
+  ): Promise<GenericResponse<User>> {
     try {
       // Check if user already exists by email (only if email is provided)
       if (body.email) {
@@ -73,31 +91,13 @@ export class UsersService {
           .scan()
           .where('email')
           .eq(body.email.toLowerCase())
+          .where('businessInfoId')
+          .eq(currentUser.businessInfoId)
           .exec();
 
         if (existingEmail && existingEmail.length > 0) {
           // If it's a Google user creation, return the existing user instead of throwing error
-          if (body.googleId) {
-            const userData = existingEmail[0].toJSON() as User;
-            delete userData.password;
-            return new GenericResponse<User>(userData);
-          }
           throw new Error('MS005');
-        }
-      }
-
-      if (body.documentNumber && body.documentType) {
-        // Verificar documento duplicado
-        const existingDocument = await this.model
-          .scan()
-          .where('documentNumber')
-          .eq(body.documentNumber)
-          .where('documentType')
-          .eq(body.documentType)
-          .exec();
-
-        if (existingDocument && existingDocument.length > 0) {
-          throw new Error('MS004');
         }
       }
 
@@ -108,19 +108,14 @@ export class UsersService {
         firstName: body.firstName,
         lastName: body.lastName || '',
         email: body.email ? body.email.toLowerCase() : '',
-        password: body.password
-          ? encrypt(body.password)
-          : encrypt(Math.random().toString(36).substring(2, 15)),
-        role: body.role || UserRole.customer,
+        role: body.role || UserRole.employee,
         status: body.status !== undefined ? body.status : true,
         documentType: body.documentType || '',
         documentNumber: body.documentNumber || '',
-        googleId: body.googleId || '',
-        profilePicture: body.profilePicture || '',
-        isVerified: body.isVerified || false,
+        isVerified: false,
         createdAt: now,
         updatedAt: now,
-        businessInfoId: body.businessInfoId || uuidv4(),
+        businessInfoId: currentUser.businessInfoId,
         apiKey: encrypt(uuidv4()),
       });
 
@@ -135,33 +130,23 @@ export class UsersService {
   async update(
     id: string,
     updateUserDto: UpdateUserDto,
+    currentUser: User,
   ): Promise<GenericResponse<User>> {
     try {
       // Get current user to check existing data
-      const currentUser = await this.model.get({ id });
-      if (!currentUser) {
+      const currentUserResult = await this.model
+        .scan()
+        .where('id')
+        .eq(id)
+        .where('businessInfoId')
+        .eq(currentUser.businessInfoId)
+        .exec();
+
+      if (!currentUserResult || currentUserResult.length === 0) {
         throw new Error('MS007');
       }
 
-      const currentUserData = currentUser.toJSON();
-
-      // Verify document is not duplicated
-      if (updateUserDto.documentNumber || updateUserDto.documentType) {
-        const existingDocument = await this.model
-          .scan()
-          .where('documentNumber')
-          .eq(updateUserDto.documentNumber)
-          .where('documentType')
-          .eq(updateUserDto.documentType)
-          .exec();
-
-        if (existingDocument && existingDocument.length > 0) {
-          const existingUser = existingDocument[0];
-          if (existingUser.id !== id) {
-            throw new Error('MS004');
-          }
-        }
-      }
+      const currentUserData = currentUserResult[0].toJSON();
 
       // Prepare update data with Google user logic
       const updateData: any = { ...updateUserDto };
@@ -175,33 +160,19 @@ export class UsersService {
       if (updateUserDto.googleId) {
         // Update Google ID and profile picture if not already set
         if (!currentUserData.googleId || !currentUserData.profilePicture) {
-          const newBusinessId = currentUserData.businessInfoId
-            ? currentUserData.businessInfoId
-            : uuidv4();
-          const newApiKey = currentUserData.apiKey
-            ? currentUserData.apiKey
-            : encrypt(uuidv4());
-
           updateData.googleId = updateUserDto.googleId;
           updateData.isVerified = true;
           updateData.profilePicture =
             updateUserDto.profilePicture || currentUserData.profilePicture;
-          updateData.businessInfoId = newBusinessId;
-          updateData.apiKey = newApiKey;
-        } else if (!currentUserData.businessInfoId) {
-          // User has googleId and profilePicture but no businessInfoId
-          updateData.businessInfoId = uuidv4();
-        } else if (!currentUserData.apiKey) {
-          updateData.apiKey = encrypt(uuidv4());
         }
       }
 
       await this.model.update({ id }, updateData);
-      const updatedUser = await this.model.get({ id });
-      if (!updatedUser) {
+      const updatedUser = await this.model.scan().where('id').eq(id).exec();
+      if (!updatedUser || updatedUser.length === 0) {
         throw new Error('MS007');
       }
-      const userData = updatedUser.toJSON() as User;
+      const userData = updatedUser[0].toJSON() as User;
       delete userData.password;
       return new GenericResponse(userData);
     } catch (error) {
@@ -209,10 +180,69 @@ export class UsersService {
     }
   }
 
-  async remove(id: string): Promise<GenericResponse<void>> {
+  async createGoogleUser(
+    body: CreateGoogleUserDto,
+  ): Promise<GenericResponse<User>> {
     try {
-      const user = await this.model.get({ id });
-      if (!user) {
+      const newUser = await this.model.create({
+        id: uuidv4(),
+        firstName: body.firstName,
+        lastName: body.lastName || '',
+        email: body.email.toLowerCase(),
+        role: UserRole.customer,
+        status: true,
+        documentType: '',
+        documentNumber: '',
+        isVerified: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        apiKey: encrypt(uuidv4()),
+      });
+
+      const userData = newUser.toJSON() as User;
+      delete userData.password;
+      return new GenericResponse<User>(userData);
+    } catch (error) {
+      throw handleError(error);
+    }
+  }
+
+  async updateGoogleUser(
+    id: string,
+    updateUserDto: UpdateGoogleUserDto,
+  ): Promise<GenericResponse<User>> {
+    try {
+
+      await this.model.update(
+        { id },
+        {
+          googleId: updateUserDto.googleId,
+          isVerified: updateUserDto.isVerified,
+          profilePicture: updateUserDto.profilePicture,
+        },
+      );
+      const updatedUser = await this.model.scan().where('id').eq(id).exec();
+      if (!updatedUser || updatedUser.length === 0) {
+        throw new Error('MS007');
+      }
+      const userData = updatedUser[0].toJSON() as User;
+      delete userData.password;
+      return new GenericResponse<User>(userData);
+    } catch (error) {
+      throw handleError(error);
+    }
+  }
+
+  async remove(id: string, currentUser: User): Promise<GenericResponse<void>> {
+    try {
+      const user = await this.model
+        .scan()
+        .where('id')
+        .eq(id)
+        .where('businessInfoId')
+        .eq(currentUser.businessInfoId)
+        .exec();
+      if (!user || user.length === 0) {
         throw new Error('MS007');
       }
       await this.model.update({ id }, { status: false });

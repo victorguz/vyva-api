@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { User } from '../../schemas/user.schema';
-import { UpdateProfileDto } from './dto/profile.dto';
-import { handleError } from '../../shared/error.functions';
+
 import { GenericResponse } from '../../core/interfaces/generic-response.interface';
+import { User } from '../../schemas/user.schema';
+import { handleError } from '../../shared/error.functions';
 import { UsersService } from '../users/users.service';
+import { UpdateProfileDto } from './dto/profile.dto';
 
 @Injectable()
 export class ProfileService {
@@ -11,7 +12,7 @@ export class ProfileService {
 
   async getProfile(user: User): Promise<GenericResponse<User>> {
     try {
-      const userResponse = await this.usersService.findOne(user.id);
+      const userResponse = await this.usersService.findOne(user.id, user);
       return userResponse;
     } catch (error) {
       throw handleError(error);
@@ -29,7 +30,7 @@ export class ProfileService {
           ([_, value]) => value !== undefined,
         ),
       );
-      const updatedUser = await this.usersService.update(user.id, updateData);
+      const updatedUser = await this.usersService.update(user.id, updateData, user);
 
       return updatedUser;
     } catch (error) {

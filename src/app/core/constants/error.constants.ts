@@ -9,7 +9,7 @@ export enum ERROR_MESSAGES {
   MS006 = 'Por favor, ingresa al menos un nombre o número de identificación para realizar la búsqueda.',
   MS007 = 'No se encontró ningún registro con los datos proporcionados.',
   MS008 = 'No hay información nueva para actualizar.',
-  MS009 = '',
+  MS009 = 'El usuario necesita estar asociado a un negocio.',
   MS010 = 'Stock insuficiente para este producto.',
   MS011 = 'Solo puedes anular esta transacción una vez.',
   MS012 = 'Este ítem no es de tipo "Membresía".',

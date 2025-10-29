@@ -99,13 +99,13 @@ export class AuthService {
 
       if (!existingUser || existingUser.length === 0) {
         // Create new user using UsersService
-        const createUserResponse = await this.usersService.create({
+        const createUserResponse = await this.usersService.createGoogleUser({
           firstName: given_name || name?.split(' ')[0] || '',
           lastName: family_name || name?.split(' ').slice(1).join(' ') || '',
-          email: email ? email.toLowerCase() : '',
+          email: email.toLowerCase(),
           googleId: sub,
           profilePicture: picture || '',
-          isVerified: true,
+          isVerified: payload.email_verified ?? false,
         });
         userData = createUserResponse.data;
       } else {
@@ -115,29 +115,23 @@ export class AuthService {
         if (
           !userData.googleId ||
           !userData.profilePicture ||
-          !userData.businessInfoId ||
           !userData.apiKey
         ) {
-          const updateUserResponse = await this.usersService.update(
+          const updateUserResponse = await this.usersService.updateGoogleUser(
             userData.id,
             {
               googleId: sub,
-              isVerified: true,
-              profilePicture: picture || userData.profilePicture,
+              isVerified: payload.email_verified ?? false,
+              profilePicture: userData.profilePicture ?? picture,
             },
           );
           userData = updateUserResponse.data;
         }
       }
 
-      const { password, ...userWithoutPassword } = userData;
+      const { password, ...userWithoutPassword } = userData as User;
 
-      const token = this.jwtService.sign({
-        sub: userData.id,
-        email: userData.email || '',
-        role: userData.role || '',
-        businessInfoId: userData.businessInfoId,
-      });
+      const token = this.createToken(userWithoutPassword as User);
       return new GenericResponse<AuthResponse>({
         token,
         user: userWithoutPassword as UserResponse,
@@ -145,6 +139,15 @@ export class AuthService {
     } catch (error) {
       throw handleError(error);
     }
+  }
+
+  createToken(user: User): string {
+    return this.jwtService.sign({
+      sub: user.id,
+      email: user.email || '',
+      role: user.role || '',
+      businessInfoId: user.businessInfoId,
+    });
   }
 
   async loginWithApiKey(
@@ -170,12 +173,7 @@ export class AuthService {
       }
       const userData = user[0].toJSON();
       const { password, ...userWithoutPassword } = userData;
-      const token = this.jwtService.sign({
-        sub: userData.id,
-        email: userData.email || '',
-        role: userData.role || '',
-        businessInfoId: userData.businessInfoId,
-      });
+      const token = this.createToken(userWithoutPassword as User);
       return new GenericResponse<AuthResponse>({
         token,
         user: userWithoutPassword as UserResponse,

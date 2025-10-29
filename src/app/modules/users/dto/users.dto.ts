@@ -20,7 +20,79 @@ import { maxEmailLength, maxGenericCharacters, maxNameLength } from '../../../co
 
 // NOTE: BusinessInfo has been moved to its own module in src/app/modules/business-info
 // User entity now references BusinessInfo via businessInfoId
+export class CreateGoogleUserDto {
+  @ApiProperty({
+    description: 'First name of the user',
+    example: 'John',
+  })
+  @IsString()
+  @IsNotEmpty()
+  firstName: string;
+  @ApiProperty({
+    description: 'Last name of the user',
+    example: 'Doe',
+  })
+  @IsString()
+  @IsOptional()
+  lastName: string;
+  @ApiProperty({
+    description: 'Email of the user',
+    example: 'john.doe@example.com',
+  })
+  @IsEmail()
+  @IsOptional()
+  email: string;
+  @ApiProperty({
+    description: 'Google ID of the user',
+    example: '123456789012345678901',
+  })
+  @IsString()
+  @IsNotEmpty()
+  googleId: string;
+  @ApiProperty({
+    description: 'Profile picture of the user',
+    example: 'https://lh3.googleusercontent.com/a/profile-picture-url',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  profilePicture?: string;
+  @ApiProperty({
+    description: 'Is verified',
+    example: true,
+    required: false,
+  })
+  @IsBoolean()
+  @IsOptional()
+  isVerified: boolean;
+}
 
+export class UpdateGoogleUserDto {
+  @ApiProperty({
+    description: 'Google ID of the user',
+    example: '123456789012345678901',
+    required: false,
+  })
+  @IsString()
+  googleId: string;
+  @ApiProperty({
+    description: 'Is verified',
+    example: true,
+    required: false,
+  })
+  @IsBoolean()
+  @IsOptional()
+  isVerified: boolean;
+
+  @ApiProperty({
+    description: 'Profile picture of the user',
+    example: 'https://lh3.googleusercontent.com/a/profile-picture-url',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  profilePicture?: string;
+}
 export class CreateUserDto {
   @ApiProperty({
     description: 'First name of the user',
@@ -160,33 +232,6 @@ export class CreateUserDto {
   @IsIn(Object.values(UserRole))
   @IsOptional()
   role?: UserRole = UserRole.customer;
-
-  @ApiProperty({
-    description: 'Google ID of the user',
-    example: '123456789012345678901',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
-  googleId?: string;
-
-  @ApiProperty({
-    description: 'Is verified',
-    example: true,
-    required: false,
-  })
-  @IsBoolean()
-  @IsOptional()
-  isVerified?: boolean = false;
-
-  @ApiProperty({
-    description: 'Profile picture URL of the user',
-    example: 'https://lh3.googleusercontent.com/a/profile-picture-url',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
-  profilePicture?: string;
 
   @ApiProperty({
     description: 'Business Info ID',

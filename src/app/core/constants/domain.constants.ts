@@ -12,10 +12,8 @@ export enum UserGender {
 export enum UserRole {
   superadmin = 'superadmin',
   admin = 'admin',
-  assistant = 'assistant',
-  trainer = 'trainer',
+  employee = 'employee',
   customer = 'customer',
-  vyva = 'vyva',
 }
 export enum PaymentMethodType {
   cash = 'cash',
