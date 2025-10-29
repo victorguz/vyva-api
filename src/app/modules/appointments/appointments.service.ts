@@ -25,6 +25,7 @@ export class AppointmentsService extends TransactionSupport {
   }
 
   async create(
+    
     body: CreateAppointmentDto,
     user: User,
   ): Promise<GenericResponse<Appointment>> {
