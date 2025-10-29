@@ -49,65 +49,6 @@ export class AppointmentsController {
     return this.appointmentsService.findAll(user, filters);
   }
 
-  @Get('order/:idOrder')
-  @ApiOperation({ summary: 'Get appointments by order ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Return appointments for the specified order.',
-    type: GenericResponse<[Appointment]>,
-  })
-  @UseGuards(AuthGuard)
-  async findByOrderId(
-    @Param('idOrder') idOrder: string,
-    @CurrentUser() user: User,
-  ): Promise<GenericResponse<Appointment[]>> {
-    return this.appointmentsService.findByOrderId(idOrder, user);
-  }
-
-  @Get('customer/:idCustomer')
-  @ApiOperation({ summary: 'Get appointments by customer ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Return appointments for the specified customer.',
-    type: GenericResponse<[Appointment]>,
-  })
-  @UseGuards(AuthGuard)
-  async findByCustomerId(
-    @Param('idCustomer') idCustomer: string,
-    @CurrentUser() user: User,
-  ): Promise<GenericResponse<Appointment[]>> {
-    return this.appointmentsService.findByCustomerId(idCustomer, user);
-  }
-
-  @Get('employee/:idEmployee')
-  @ApiOperation({ summary: 'Get appointments by employee ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Return appointments for the specified employee.',
-    type: GenericResponse<[Appointment]>,
-  })
-  @UseGuards(AuthGuard)
-  async findByEmployeeId(
-    @Param('idEmployee') idEmployee: string,
-    @CurrentUser() user: User,
-  ): Promise<GenericResponse<Appointment[]>> {
-    return this.appointmentsService.findByEmployeeId(idEmployee, user);
-  }
-
-  @Get(':id')
-  @ApiOperation({ summary: 'Get an appointment by ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Return the appointment by ID.',
-    type: GenericResponse<Appointment>,
-  })
-  @UseGuards(AuthGuard)
-  async findOne(
-    @Param('id') id: string,
-  ): Promise<GenericResponse<Appointment>> {
-    return this.appointmentsService.findOne(id);
-  }
-
   @Put(':id')
   @ApiOperation({ summary: 'Update an appointment' })
   @ApiResponse({
