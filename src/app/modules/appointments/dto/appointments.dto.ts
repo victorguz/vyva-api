@@ -1,7 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDateString, IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsArray, IsDateString, IsEnum, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator';
 
 import { AppointmentStatus } from '../../../core/constants/domain.constants';
+import { SalesOrderPaymentMethodDto } from '../../sales-orders/dto/sales-orders.dto';
 
 export class CreateAppointmentDto {
   @ApiProperty({ description: 'Appointment start date and time' })
@@ -33,6 +35,16 @@ export class CreateAppointmentDto {
   @IsString()
   @IsOptional()
   idOrder: string;
+
+  @ApiProperty({
+    description: 'Payment methods for the order',
+    type: [SalesOrderPaymentMethodDto],
+  })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => SalesOrderPaymentMethodDto)
+  @IsNotEmpty()
+  paymentMethods: SalesOrderPaymentMethodDto[];
 
   @ApiProperty({
     description: 'Appointment status',
@@ -76,6 +88,16 @@ export class UpdateAppointmentDto {
   idOrder?: string;
 
   @ApiProperty({
+    description: 'Updated payment methods for the order',
+    type: [SalesOrderPaymentMethodDto],
+  })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => SalesOrderPaymentMethodDto)
+  @IsOptional()
+  paymentMethods?: SalesOrderPaymentMethodDto[];
+
+  @ApiProperty({
     description: 'Appointment status',
     enum: AppointmentStatus,
   })
@@ -93,8 +115,8 @@ export class ListAppointmentDto {
   @ApiProperty({ description: 'Order ID filter' })
   @IsString()
   @IsOptional()
-idOrder?: string;
-  
+  idOrder?: string;
+
   @ApiProperty({ description: 'Customer ID filter' })
   @IsString()
   @IsOptional()

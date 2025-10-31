@@ -26,12 +26,11 @@ export interface SalesOrder extends SalesOrderKey {
   products: SalesOrderItem[];
   paymentMethods: SalesOrderPaymentMethod[];
   totalAmount: number;
+  paidAmount: number;
   status: string;
   businessInfoId?: string;
   createdBy?: string;
   modifiedBy?: string;
-  createdAt: Date;
-  updatedAt: Date;
 }
 
 export const SalesOrderSchema = new Schema(

@@ -18,8 +18,8 @@ export interface Appointment extends AppointmentKey {
   businessInfoId?: string;
   createdBy?: string;
   modifiedBy?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export const AppointmentSchema = new Schema(

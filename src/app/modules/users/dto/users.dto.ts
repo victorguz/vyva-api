@@ -14,7 +14,7 @@ import {
   IsString,
   MaxLength,
 } from 'class-validator';
-import { UserRole } from 'src/app/core/constants/domain.constants';
+import { UserGender, UserRole } from 'src/app/core/constants/domain.constants';
 
 import { maxEmailLength, maxGenericCharacters, maxNameLength } from '../../../core/constants/generic.constants';
 
@@ -386,6 +386,36 @@ export class UpdateUserDto {
   @IsString()
   @IsOptional()
   profilePicture?: string;
+
+  @ApiProperty({
+    description: 'Role of the user',
+    enum: UserRole,
+    default: UserRole.customer,
+    required: false,
+  })
+  @IsIn(Object.values(UserRole))
+  @IsOptional()
+  role?: UserRole = UserRole.customer;
+
+
+  @ApiProperty({
+    description: 'Gender of the user',
+    enum: UserGender,
+    default: '',
+    required: false,
+  })
+  @IsIn([...Object.values(UserGender), ''])
+  @IsOptional()
+  gender?: UserGender | '' = '';
+
+  @ApiProperty({
+    description: 'Date of birth of the user',
+    example: '2020-07-10 15:00:00.000',
+    required: false,
+    default: '',
+  })
+  @IsOptional()
+  dateOfBirth?: string;
 }
 
 export class FindOneUserDto {

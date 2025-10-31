@@ -8,7 +8,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { GenericResponse } from '../../core/interfaces/generic-response.interface';
 import { Product, ProductKey } from '../../schemas/product.schema';
-import { SalesOrder, SalesOrderKey } from '../../schemas/sales-order.schema';
+import { SalesOrder, SalesOrderItem, SalesOrderKey } from '../../schemas/sales-order.schema';
 import { handleError } from '../../shared/error.functions';
 import {
   CreateSalesOrderDto,
@@ -40,41 +40,9 @@ export class SalesOrdersService extends TransactionSupport {
   ): Promise<GenericResponse<SalesOrder>> {
     try {
       const transactions = [];
-      // Generate unique order number
-      const orderNumber = this.generateOrderNumber();
 
-      // Fetch products from database to get accurate prices and stock info
-      const productDetails = await this.fetchProductDetails(
-        body.products,
-        user.businessInfoId,
-      );
+      const salesOrder = await this.createOrderObject(body, user);
 
-      // Calculate total amount from database product prices
-      const totalAmount = this.calculateTotalAmountFromProducts(
-        body.products,
-        productDetails,
-      );
-      const paidAmount = this.calculatePaidAmount(body.paymentMethods);
-      // Validate stock availability for products that require stock
-      this.validateStockAvailability(body.products, productDetails);
-      const salesOrder = {
-        id: uuidv4(),
-        orderNumber,
-        idCustomer: body.idCustomer,
-        products: body.products,
-        paymentMethods: body.paymentMethods,
-        paidAmount,
-        totalAmount,
-        status:
-          paidAmount === 0
-            ? SalesOrderStatus.pending
-            : paidAmount === totalAmount
-            ? SalesOrderStatus.paid
-            : SalesOrderStatus.partiallyPaid,
-        businessInfoId: user.businessInfoId,
-        createdBy: user.id,
-      };
-      // Create sales order using Dynamoose
       const newSalesOrder = this.model.transaction.create({
         ...salesOrder,
       });
@@ -89,7 +57,45 @@ export class SalesOrdersService extends TransactionSupport {
       throw handleError(error);
     }
   }
+  async createOrderObject(
+    body: CreateSalesOrderDto,
+    user: User,
+  ): Promise<SalesOrder> {
+    const orderNumber = this.generateOrderNumber();
 
+    // Fetch products from database to get accurate prices and stock info
+    const productDetails = await this.fetchProductDetails(
+      body.products,
+      user.businessInfoId,
+    );
+
+    // Calculate total amount from database product prices
+    const totalAmount = this.calculateTotalAmountFromProducts(
+      body.products,
+      productDetails,
+    );
+    const paidAmount = this.calculatePaidAmount(body.paymentMethods);
+    // Validate stock availability for products that require stock
+    this.validateStockAvailability(body.products, productDetails);
+    const salesOrder: SalesOrder = {
+      id: uuidv4(),
+      orderNumber,
+      idCustomer: body.idCustomer,
+      products: body.products,
+      paymentMethods: body.paymentMethods,
+      paidAmount,
+      totalAmount,
+      status:
+        paidAmount === 0
+          ? SalesOrderStatus.pending
+          : paidAmount === totalAmount
+          ? SalesOrderStatus.paid
+          : SalesOrderStatus.partiallyPaid,
+      businessInfoId: user.businessInfoId,
+      createdBy: user.id,
+    };
+    return salesOrder;
+  }
   async update(
     id: string,
     body: UpdateSalesOrderDto,
@@ -210,38 +216,31 @@ export class SalesOrdersService extends TransactionSupport {
   private async fetchProductDetails(
     products: any[],
     businessInfoId: string,
-  ): Promise<Map<string, Product>> {
-    const productMap = new Map<string, Product>();
+  ): Promise<Product[]> {
+    const productIds = products.map((product) => product.id);
+    const productDetailsArray: Product[] = await this.productModel
+      .scan('id')
+      .in(productIds)
+      .where('businessInfoId')
+      .eq(businessInfoId)
+      .exec();
 
-    for (const product of products) {
-      try {
-        const productDetail = await this.productModel.get({ id: product.id });
-        if (!productDetail) {
-          throw new Error('MS007');
-        }
-
-        const productData = productDetail.toJSON() as Product;
-
-        // Verify product belongs to the same business
-        if (productData.businessInfoId !== businessInfoId) {
-          throw new Error('MS014');
-        }
-
-        productMap.set(product.id, productData);
-      } catch (error) {
-        throw handleError(error);
-      }
+    if (
+      !productDetailsArray ||
+      productDetailsArray.length !== productIds.length
+    ) {
+      throw new Error('MS007');
     }
 
-    return productMap;
+    return productDetailsArray;
   }
 
   private calculateTotalAmountFromProducts(
-    orderProducts: any[],
-    productDetails: Map<string, Product>,
+    orderProducts: SalesOrderItem[],
+    productDetails: Product[],
   ): number {
     return orderProducts.reduce((total, orderProduct) => {
-      const product = productDetails.get(orderProduct.id);
+      const product = productDetails.find((p) => p.id === orderProduct.id);
       if (!product) {
         throw new Error('MS007');
       }
@@ -261,10 +260,10 @@ export class SalesOrdersService extends TransactionSupport {
 
   private validateStockAvailability(
     orderProducts: any[],
-    productDetails: Map<string, Product>,
+    productDetails: Product[],
   ): void {
     for (const orderProduct of orderProducts) {
-      const product = productDetails.get(orderProduct.id);
+      const product = productDetails.find((p) => p.id === orderProduct.id);
       if (!product) {
         throw new Error('MS007');
       }
@@ -356,15 +355,11 @@ export class SalesOrdersService extends TransactionSupport {
         .scan()
         .where('businessInfoId')
         .eq(businessInfoId)
+        .where('createdAt')
+        .between(startDate.getTime(), endDate.getTime())
         .exec();
 
-      // Filtrar por fecha en memoria
-      const filteredOrders = allSalesOrders.filter((order) => {
-        const orderDate = new Date(order.createdAt);
-        return orderDate >= startDate && orderDate <= endDate;
-      });
-
-      return filteredOrders.map((order) => order as SalesOrder);
+      return allSalesOrders.map((order) => order as SalesOrder);
     } catch (error) {
       throw handleError(error);
     }

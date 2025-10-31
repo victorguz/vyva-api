@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel, Model, TransactionSupport } from 'nestjs-dynamoose';
 import { AppointmentStatus } from 'src/app/core/constants/domain.constants';
+import { SalesOrder, SalesOrderKey } from 'src/app/schemas/sales-order.schema';
 import { User } from 'src/app/schemas/user.schema';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -8,6 +9,7 @@ import { GenericResponse } from '../../core/interfaces/generic-response.interfac
 import { Appointment, AppointmentKey } from '../../schemas/appointment.schema';
 import { handleError } from '../../shared/error.functions';
 import { deleteEmptyProperties } from '../../shared/shared.functions';
+import { SalesOrdersService } from '../sales-orders/sales-orders.service';
 import {
   CreateAppointmentDto,
   ListAppointmentDto,
@@ -20,22 +22,41 @@ export class AppointmentsService extends TransactionSupport {
   constructor(
     @InjectModel('Appointment')
     private readonly model: Model<Appointment, AppointmentKey>,
+    private readonly salesOrderService: SalesOrdersService,
+    @InjectModel('SalesOrder')
+    private readonly salesOrderModel: Model<SalesOrder, SalesOrderKey>,
   ) {
     super();
   }
 
   async create(
-    
     body: CreateAppointmentDto,
     user: User,
   ): Promise<GenericResponse<Appointment>> {
     try {
-      let appointment: Appointment | null = null;
+      const transactions = [];
+      const salesOrder = await this.salesOrderService.createOrderObject(
+        {
+          products: [
+            { id: body.idService, quantity: 1, isService: true, price: 0 },
+          ],
+          paymentMethods: body.paymentMethods,
+          idCustomer: body.idCustomer,
+        },
+        user,
+      );
+      const salesTransaction =
+        this.salesOrderModel.transaction.create(salesOrder);
+      transactions.push(salesTransaction);
+
+      let appointment = null;
       if (body.startDate && body.endDate) {
-        appointment = (await this.model.create({
+        this.validateAppointmentDates(body.startDate, body.endDate);
+
+        appointment = {
           id: uuidv4(),
-          startDate: new Date(body.startDate),
-          endDate: new Date(body.endDate),
+          startDate: new Date(body.startDate).getTime() as any,
+          endDate: new Date(body.endDate).getTime() as any,
           idService: body.idService,
           idCustomer: body.idCustomer,
           idEmployee: body.idEmployee,
@@ -43,14 +64,22 @@ export class AppointmentsService extends TransactionSupport {
           status: AppointmentStatus.pending,
           businessInfoId: user.businessInfoId,
           createdBy: user.id,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        })) as Appointment;
+        };
+
+        const cleanedPayload = deleteEmptyProperties(appointment);
+
+        const appointmentTransaction = this.model.transaction.create({
+          ...cleanedPayload,
+          idOrder: salesOrder.id,
+        });
+        
+        transactions.push(appointmentTransaction);
       }
 
+      await this.transaction([...transactions]);
 
       const appointmentResult = await this.model.get({ id: appointment.id });
-      // Return the created appointment
+
       return new GenericResponse(appointmentResult);
     } catch (error) {
       throw handleError(error);
@@ -95,13 +124,11 @@ export class AppointmentsService extends TransactionSupport {
 
       // Apply date range filters
       if (filters?.startDate) {
-        query = query
-          .where('startDate')
-          .ge(new Date(filters.startDate).getTime());
+        query = query.where('startDate').ge(new Date(filters.startDate) as any);
       }
 
       if (filters?.endDate) {
-        query = query.where('endDate').le(new Date(filters.endDate).getTime());
+        query = query.where('endDate').le(new Date(filters.endDate) as any);
       }
 
       const appointments = (await query.exec()).map(
