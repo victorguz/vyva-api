@@ -20,9 +20,9 @@ import {
 @Injectable()
 export class AppointmentsService extends TransactionSupport {
   constructor(
+    private readonly salesOrderService: SalesOrdersService,
     @InjectModel('Appointment')
     private readonly model: Model<Appointment, AppointmentKey>,
-    private readonly salesOrderService: SalesOrdersService,
     @InjectModel('SalesOrder')
     private readonly salesOrderModel: Model<SalesOrder, SalesOrderKey>,
   ) {
@@ -72,7 +72,7 @@ export class AppointmentsService extends TransactionSupport {
           ...cleanedPayload,
           idOrder: salesOrder.id,
         });
-        
+
         transactions.push(appointmentTransaction);
       }
 
@@ -151,14 +151,6 @@ export class AppointmentsService extends TransactionSupport {
         throw new Error('MS014');
       }
 
-      // Clean the DTO first to remove undefined/null values
-      const cleanedDto = deleteEmptyProperties(updateAppointmentDto);
-
-      // Validate dates if provided
-      if (cleanedDto.startDate && cleanedDto.endDate) {
-        this.validateAppointmentDates(cleanedDto.startDate, cleanedDto.endDate);
-      }
-
       const appointmentResult = await this.model
         .scan()
         .where('id')
@@ -166,12 +158,19 @@ export class AppointmentsService extends TransactionSupport {
         .where('businessInfoId')
         .eq(user.businessInfoId)
         .exec();
+
       if (!appointmentResult || appointmentResult.length === 0) {
         throw new Error('MS007');
       }
-      const appointment = appointmentResult[0];
 
-      // Convert date strings to Date objects if provided
+      const appointment = appointmentResult[0] as Appointment;
+      const transactions: any[] = [];
+
+      // Separate paymentMethods from other fields
+      const cleanedUpdateDto = deleteEmptyProperties(updateAppointmentDto);
+      const { paymentMethods, ...cleanedDto } = cleanedUpdateDto as any;
+
+      // Handle date conversions and validation
       if (cleanedDto.startDate) {
         cleanedDto.startDate = new Date(cleanedDto.startDate) as any;
       }
@@ -179,8 +178,93 @@ export class AppointmentsService extends TransactionSupport {
         cleanedDto.endDate = new Date(cleanedDto.endDate) as any;
       }
 
-      await this.model.update({ id: appointment.id }, cleanedDto);
-      const updatedAppointment = await this.model.get({ id });
+      // Validate dates if both are provided
+      if (cleanedDto.startDate && cleanedDto.endDate) {
+        this.validateAppointmentDates(
+          cleanedDto.startDate.toString(),
+          cleanedDto.endDate.toString(),
+        );
+      }
+
+      // Handle payment methods update if provided
+      if (paymentMethods && paymentMethods.length > 0) {
+        let orderId = appointment.idOrder;
+
+        if (!orderId) {
+          // Create new order if none exists
+          const newOrder = await this.salesOrderService.createOrderObject(
+            {
+              products: [
+                {
+                  id: appointment.idService,
+                  quantity: 1,
+                  isService: true,
+                  price: 0,
+                },
+              ],
+              paymentMethods: paymentMethods,
+              idCustomer: appointment.idCustomer || '',
+            },
+            user,
+          );
+
+          const orderCreateTx =
+            this.salesOrderModel.transaction.create(newOrder);
+          transactions.push(orderCreateTx);
+
+          // Update appointment with new order ID
+          cleanedDto.idOrder = newOrder.id;
+        } else {
+          // Update existing order - only update payment-related fields
+          const existingOrder = await this.salesOrderModel.get({
+            id: orderId,
+          });
+          if (!existingOrder) {
+            throw new Error('MS007');
+          }
+
+          const orderData = existingOrder.toJSON() as SalesOrder;
+
+          // Calculate new values based on payment methods
+          const paidAmount = this.calculatePaidAmount(paymentMethods);
+          const totalAmount = orderData.totalAmount || 0;
+          const orderStatus =
+            paidAmount === 0
+              ? 'pending'
+              : paidAmount === totalAmount
+              ? 'paid'
+              : 'partiallyPaid';
+
+          // Only update payment-related fields, keep existing id, orderNumber, products, etc.
+          const orderUpdateTx = this.salesOrderModel.transaction.update(
+            { id: orderId },
+            {
+              paymentMethods: paymentMethods,
+              paidAmount: paidAmount,
+              status: orderStatus,
+              modifiedBy: user.id,
+            } as any,
+          );
+          transactions.push(orderUpdateTx);
+        }
+      }
+
+      // Update appointment fields if there are any changes
+      if (Object.keys(cleanedDto).length > 0) {
+        const appointmentUpdateTx = this.model.transaction.update(
+          { id: appointment.id },
+          { ...cleanedDto, modifiedBy: user.id },
+        );
+        transactions.push(appointmentUpdateTx);
+      }
+
+      // Execute transaction if there are any operations
+      if (transactions.length > 0) {
+        await this.transaction(transactions);
+      }
+
+      // Return updated appointment
+      const updatedAppointment = await this.model.get({ id: appointment.id });
 
       if (!updatedAppointment) {
         throw new Error('MS007');
@@ -249,5 +333,14 @@ export class AppointmentsService extends TransactionSupport {
     if (start >= end) {
       throw new Error('MS041');
     }
+  }
+
+  private calculatePaidAmount(
+    paymentMethods: Array<{ value: number }>,
+  ): number {
+    return (paymentMethods || []).reduce(
+      (acc, item) => acc + (item?.value || 0),
+      0,
+    );
   }
 }

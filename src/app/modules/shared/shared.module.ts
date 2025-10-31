@@ -2,10 +2,13 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { DynamooseModule } from 'nestjs-dynamoose';
+import { AppointmentSchema } from 'src/app/schemas/appointment.schema';
+import { ProductSchema } from 'src/app/schemas/product.schema';
+import { SalesOrderSchema } from 'src/app/schemas/sales-order.schema';
 
 import { JWT_EXPIRATION } from '../../core/config/environment.config';
-import { UserSchema } from '../../schemas/user.schema';
 import { CustomerSchema } from '../../schemas/customer.schema';
+import { UserSchema } from '../../schemas/user.schema';
 import { AuthGuard } from '../auth/guards/auth.guard';
 
 @Module({
@@ -28,6 +31,18 @@ import { AuthGuard } from '../auth/guards/auth.guard';
         options: {
           tableName: 'users',
         },
+        serializers: {
+          frontend: {
+            include: [
+              'id',
+              'firstName',
+              'lastName',
+              'email',
+              'phone',
+              'createdAt',
+            ],
+          },
+        },
       },
       {
         name: 'Customer',
@@ -37,8 +52,37 @@ import { AuthGuard } from '../auth/guards/auth.guard';
         },
         serializers: {
           frontend: {
-            include: ['id', 'firstName', 'lastName', 'email', 'phone','createdAt'],
+            include: [
+              'id',
+              'firstName',
+              'lastName',
+              'email',
+              'phone',
+              'createdAt',
+            ],
           },
+        },
+      },
+
+      {
+        name: 'Appointment',
+        schema: AppointmentSchema,
+        options: {
+          tableName: 'appointments',
+        },
+      },
+      {
+        name: 'SalesOrder',
+        schema: SalesOrderSchema,
+        options: {
+          tableName: 'sales-orders',
+        },
+      },
+      {
+        name: 'Product',
+        schema: ProductSchema,
+        options: {
+          tableName: 'products',
         },
       },
     ]),
@@ -46,4 +90,4 @@ import { AuthGuard } from '../auth/guards/auth.guard';
   providers: [AuthGuard],
   exports: [AuthGuard, JwtModule, DynamooseModule],
 })
-export class SharedAuthModule {}
+export class SharedModule {}

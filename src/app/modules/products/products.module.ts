@@ -1,13 +1,14 @@
 import { Module } from '@nestjs/common';
 import { DynamooseModule } from 'nestjs-dynamoose';
-import { ProductsService } from './products.service';
-import { ProductsController } from './products.controller';
+
 import { ProductSchema } from '../../schemas/product.schema';
-import { SharedAuthModule } from '../shared/shared-auth.module';
+import { SharedModule } from '../shared/shared.module';
+import { ProductsController } from './products.controller';
+import { ProductsService } from './products.service';
 
 @Module({
   imports: [
-    SharedAuthModule,
+    SharedModule,
     DynamooseModule.forFeature([
       {
         name: 'Product',

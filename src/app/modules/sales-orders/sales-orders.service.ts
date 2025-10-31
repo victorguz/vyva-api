@@ -2,13 +2,12 @@ import { Injectable } from '@nestjs/common';
 import * as moment from 'moment';
 import { InjectModel, Model, TransactionSupport } from 'nestjs-dynamoose';
 import { PaymentMethodType, SalesOrderStatus } from 'src/app/core/constants/domain.constants';
-import { Appointment, AppointmentKey } from 'src/app/schemas/appointment.schema';
 import { User } from 'src/app/schemas/user.schema';
 import { v4 as uuidv4 } from 'uuid';
 
 import { GenericResponse } from '../../core/interfaces/generic-response.interface';
 import { Product, ProductKey } from '../../schemas/product.schema';
-import { SalesOrder, SalesOrderItem, SalesOrderKey } from '../../schemas/sales-order.schema';
+import { SalesOrder, SalesOrderKey } from '../../schemas/sales-order.schema';
 import { handleError } from '../../shared/error.functions';
 import {
   CreateSalesOrderDto,
@@ -16,6 +15,7 @@ import {
   DateRangeReportDto,
   ListSalesOrderDto,
   PaymentMethodSummaryDto,
+  SalesOrderItemDto,
   SalesOrderPaymentMethodDto,
   SalesReportResponseDto,
   UpdateSalesOrderDto,
@@ -28,8 +28,6 @@ export class SalesOrdersService extends TransactionSupport {
     private readonly model: Model<SalesOrder, SalesOrderKey>,
     @InjectModel('Product')
     private readonly productModel: Model<Product, ProductKey>,
-    @InjectModel('Appointment')
-    private readonly appointmentModel: Model<Appointment, AppointmentKey>,
   ) {
     super();
   }
@@ -43,10 +41,10 @@ export class SalesOrdersService extends TransactionSupport {
 
       const salesOrder = await this.createOrderObject(body, user);
 
-      const newSalesOrder = this.model.transaction.create({
+      const salesTransaction = this.model.transaction.create({
         ...salesOrder,
       });
-      transactions.push(newSalesOrder);
+      transactions.push(salesTransaction);
 
       await this.transaction([...transactions]);
 
@@ -57,6 +55,7 @@ export class SalesOrdersService extends TransactionSupport {
       throw handleError(error);
     }
   }
+
   async createOrderObject(
     body: CreateSalesOrderDto,
     user: User,
@@ -70,18 +69,13 @@ export class SalesOrdersService extends TransactionSupport {
     );
 
     // Calculate total amount from database product prices
-    const totalAmount = this.calculateTotalAmountFromProducts(
-      body.products,
-      productDetails,
-    );
+    const totalAmount = this.calculateTotalAmountFromProducts(productDetails);
     const paidAmount = this.calculatePaidAmount(body.paymentMethods);
-    // Validate stock availability for products that require stock
-    this.validateStockAvailability(body.products, productDetails);
     const salesOrder: SalesOrder = {
       id: uuidv4(),
       orderNumber,
       idCustomer: body.idCustomer,
-      products: body.products,
+      products: productDetails,
       paymentMethods: body.paymentMethods,
       paidAmount,
       totalAmount,
@@ -214,9 +208,9 @@ export class SalesOrdersService extends TransactionSupport {
   }
 
   private async fetchProductDetails(
-    products: any[],
+    products: SalesOrderItemDto[],
     businessInfoId: string,
-  ): Promise<Product[]> {
+  ): Promise<SalesOrderItemDto[]> {
     const productIds = products.map((product) => product.id);
     const productDetailsArray: Product[] = await this.productModel
       .scan('id')
@@ -232,22 +226,23 @@ export class SalesOrdersService extends TransactionSupport {
       throw new Error('MS007');
     }
 
-    return productDetailsArray;
+    return productDetailsArray.map((product) => ({
+      id: product.id,
+      quantity: products.find((p) => p.id === product.id)?.quantity ?? 0,
+      isService: product.isService,
+      price: product.price,
+      offerPrice: product.offerPrice,
+    }));
   }
 
   private calculateTotalAmountFromProducts(
-    orderProducts: SalesOrderItem[],
-    productDetails: Product[],
+    productDetails: SalesOrderItemDto[],
   ): number {
-    return orderProducts.reduce((total, orderProduct) => {
-      const product = productDetails.find((p) => p.id === orderProduct.id);
-      if (!product) {
-        throw new Error('MS007');
-      }
-
-      const price = product.offerPrice ?? product.price ?? 0;
-      return total + price * orderProduct.quantity;
-    }, 0);
+    return productDetails.reduce(
+      (total, orderProduct) =>
+        total + orderProduct.price * orderProduct.quantity,
+      0,
+    );
   }
 
   private calculatePaidAmount(
@@ -256,25 +251,6 @@ export class SalesOrdersService extends TransactionSupport {
     return paymentMethods.reduce((acc, item) => {
       return acc + item.value;
     }, 0);
-  }
-
-  private validateStockAvailability(
-    orderProducts: any[],
-    productDetails: Product[],
-  ): void {
-    for (const orderProduct of orderProducts) {
-      const product = productDetails.find((p) => p.id === orderProduct.id);
-      if (!product) {
-        throw new Error('MS007');
-      }
-
-      if (product.requireStock) {
-        const currentStock = product.stock ?? 0;
-        if (currentStock < orderProduct.quantity) {
-          throw new Error('MS010');
-        }
-      }
-    }
   }
 
   private generateOrderNumber(): string {
