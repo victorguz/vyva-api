@@ -1,28 +1,61 @@
 services:
-  db:
-    image: postgres:latest
+  # Local DynamoDB for development
+  dynamodb-local:
+    image: amazon/dynamodb-local:latest
+    container_name: vyva-dynamodb-local
     restart: always
-    environment:
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_USER: postgres
-      POSTGRES_DB: postgres
-    volumes:
-      - pgdata:/var/lib/postgresql/data
+    command: '-jar DynamoDBLocal.jar -sharedDb -dbPath ./data'
     ports:
-      - 7000:5432
+      - '8000:8000'
+    volumes:
+      - dynamodb-data:/home/dynamodblocal/data
     networks:
       - backend
-  admin:
-    image: adminer
+    working_dir: /home/dynamodblocal
+
+  # DynamoDB Admin UI
+  dynamodb-admin:
+    image: aaronshaf/dynamodb-admin:latest
+    container_name: vyva-dynamodb-admin
     restart: always
     depends_on:
-      - db
+      - dynamodb-local
+    environment:
+      DYNAMO_ENDPOINT: http://dynamodb-local:8000
+      AWS_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: local
+      AWS_SECRET_ACCESS_KEY: local
     ports:
-      - 8080:8080
+      - '8001:8001'
     networks:
       - backend
+
+  # Application service (optional - uncomment to run the app in Docker)
+  # app:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   container_name: vyva-auth-api
+  #   restart: always
+  #   depends_on:
+  #     - dynamodb-local
+  #   environment:
+  #     NODE_ENV: dev
+  #     NODE_LOCAL: "true"
+  #     PORT: 3000
+  #     AWS_REGION: us-east-1
+  #     ACCESS_KEY_ID: local
+  #     SECRET_ACCESS_KEY: local
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - .:/app
+  #     - /app/node_modules
+  #   networks:
+  #     - backend
+
 volumes:
-  pgdata:
+  dynamodb-data:
 
 networks:
   backend:

@@ -128,7 +128,87 @@ cp .env.example .env
 
 4. Set up AWS credentials and configure the serverless.yml file with your AWS account details.
 
-### Development
+### Local Development with Docker
+
+For local development with DynamoDB Local, you can use Docker Compose:
+
+1. Start DynamoDB Local and Admin UI:
+
+```bash
+docker-compose up -d
+```
+
+This will start:
+
+- **DynamoDB Local**: Available at `http://localhost:8000`
+- **DynamoDB Admin UI**: Available at `http://localhost:8001`
+
+2. Create a `.env` file with local configuration:
+
+```bash
+# Environment
+NODE_ENV=dev
+NODE_LOCAL=true
+PORT=3000
+ERROR_LOGS=true
+
+# JWT Configuration
+JWT_SECRET=your-jwt-secret-here
+SECRET_KEY=your-secret-key-here
+
+# Admin Configuration
+ADMIN_PHONE=+1234567890
+ADMIN_EMAIL=admin@example.com
+
+# SMTP Configuration
+IAM_SMTP=your-iam-smtp
+SMTP_HOST=smtp.example.com
+SMTP_USER=your-smtp-user
+SMTP_PASSWORD=your-smtp-password
+EMAIL_SENDER=noreply@example.com
+
+# AWS Configuration (for local DynamoDB, these can be dummy values)
+ACCESS_KEY_ID=local
+SECRET_ACCESS_KEY=local
+REGION=us-east-1
+
+# Google OAuth Configuration
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+```
+
+3. Start the development server:
+
+```bash
+npm run start
+```
+
+4. The API will be available at `http://localhost:3000`
+5. Swagger documentation available at `http://localhost:3000/api/docs`
+6. DynamoDB Admin UI available at `http://localhost:8001`
+
+**Note**: When `NODE_LOCAL=true`, the application will connect to DynamoDB Local instead of AWS DynamoDB.
+
+#### Managing Docker Services
+
+```bash
+# Start services
+docker-compose up -d
+
+# Stop services
+docker-compose down
+
+# View logs
+docker-compose logs -f
+
+# View DynamoDB Local logs
+docker-compose logs -f dynamodb-local
+
+# Restart services
+docker-compose restart
+```
+
+### Development (without Docker)
 
 1. Start the development server:
 

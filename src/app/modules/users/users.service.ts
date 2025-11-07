@@ -6,7 +6,7 @@ import { UserRole } from '../../core/constants/domain.constants';
 import { GenericResponse } from '../../core/interfaces/generic-response.interface';
 import { User, UserKey } from '../../schemas/user.schema';
 import { handleError } from '../../shared/error.functions';
-import { encrypt } from '../../shared/shared.functions';
+import { deleteEmptyProperties, encrypt } from '../../shared/shared.functions';
 import { CreateGoogleUserDto, CreateUserDto, UpdateGoogleUserDto, UpdateUserDto } from './dto/users.dto';
 
 @Injectable()
@@ -91,12 +91,9 @@ export class UsersService {
           .scan()
           .where('email')
           .eq(body.email.toLowerCase())
-          .where('businessInfoId')
-          .eq(currentUser.businessInfoId)
           .exec();
 
         if (existingEmail && existingEmail.length > 0) {
-          // If it's a Google user creation, return the existing user instead of throwing error
           throw new Error('MS005');
         }
       }
@@ -146,33 +143,24 @@ export class UsersService {
         throw new Error('MS007');
       }
 
-      const currentUserData = currentUserResult[0].toJSON();
+      if (updateUserDto.email) {
+        const currentEmailResult = await this.model
+          .scan()
+          .where('email')
+          .eq(updateUserDto.email)
+          .exec();
 
-      // Prepare update data with Google user logic
-      const updateData: any = { ...updateUserDto };
-
+        if (currentEmailResult && currentEmailResult.length > 0) {
+          throw new Error('MS005');
+        }
+      }
+      const updateData = deleteEmptyProperties(updateUserDto);
       // Encrypt password if it's being updated
       if (updateUserDto.password) {
         updateData.password = encrypt(updateUserDto.password);
       }
-
-      // Handle Google user specific updates
-      if (updateUserDto.googleId) {
-        // Update Google ID and profile picture if not already set
-        if (!currentUserData.googleId || !currentUserData.profilePicture) {
-          updateData.googleId = updateUserDto.googleId;
-          updateData.isVerified = true;
-          updateData.profilePicture =
-            updateUserDto.profilePicture || currentUserData.profilePicture;
-        }
-      }
-
-      await this.model.update({ id }, updateData);
-      const updatedUser = await this.model.scan().where('id').eq(id).exec();
-      if (!updatedUser || updatedUser.length === 0) {
-        throw new Error('MS007');
-      }
-      const userData = updatedUser[0].toJSON() as User;
+      const updatedUser = await this.model.update({ id }, updateData);
+      const userData = updatedUser.toJSON() as User;
       delete userData.password;
       return new GenericResponse(userData);
     } catch (error) {
@@ -212,8 +200,8 @@ export class UsersService {
     updateUserDto: UpdateGoogleUserDto,
   ): Promise<GenericResponse<User>> {
     try {
-
-      await this.model.update(
+    
+      const updatedUser =   await this.model.update(
         { id },
         {
           googleId: updateUserDto.googleId,
@@ -221,12 +209,7 @@ export class UsersService {
           profilePicture: updateUserDto.profilePicture,
         },
       );
-      const updatedUser = await this.model.scan().where('id').eq(id).exec();
-      if (!updatedUser || updatedUser.length === 0) {
-        throw new Error('MS007');
-      }
-      const userData = updatedUser[0].toJSON() as User;
-      delete userData.password;
+      const userData = updatedUser?.serialize("frontend") as User;
       return new GenericResponse<User>(userData);
     } catch (error) {
       throw handleError(error);

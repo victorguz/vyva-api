@@ -1,6 +1,6 @@
 import { ConfigModuleOptions } from '@nestjs/config';
 import { plainToInstance } from 'class-transformer';
-import { IsBoolean, IsEnum, IsNumber, IsString, validateSync } from 'class-validator';
+import { IsBoolean, IsEnum, IsNumber, IsOptional, IsString, validateSync } from 'class-validator';
 import * as Joi from 'joi';
 
 export enum Environment {
@@ -23,6 +23,10 @@ export class EnvironmentVariables {
 
   @IsBoolean()
   ERROR_LOGS: boolean;
+
+  @IsOptional()
+  @IsString()
+  NODE_LOCAL?: string;
 
   // @IsString()
   // DB_DIALECT: string;
@@ -69,14 +73,17 @@ export class EnvironmentVariables {
   @IsString()
   EMAIL_SENDER: string;
 
+  @IsOptional()
   @IsString()
-  ACCESS_KEY_ID: string;
+  ACCESS_KEY_ID?: string;
 
+  @IsOptional()
   @IsString()
-  SECRET_ACCESS_KEY: string;
+  SECRET_ACCESS_KEY?: string;
 
+  @IsOptional()
   @IsString()
-  REGION: string;
+  REGION?: string;
 
   @IsString()
   GOOGLE_CLIENT_ID: string;
@@ -88,6 +95,7 @@ const validationSchema = Joi.object({
   NODE_ENV: Joi.string(),
   PORT: Joi.number(),
   ERROR_LOGS: Joi.boolean(),
+  NODE_LOCAL: Joi.string().optional(),
   // DB_DIALECT: Joi.string(),
   // DB_USER: Joi.string(),
   // DB_PASSWORD: Joi.string(),
@@ -103,9 +111,9 @@ const validationSchema = Joi.object({
   SMTP_USER: Joi.string(),
   SMTP_PASSWORD: Joi.string(),
   EMAIL_SENDER: Joi.string(),
-  ACCESS_KEY_ID: Joi.string().required(),
-  SECRET_ACCESS_KEY: Joi.string().required(),
-  REGION: Joi.string().required(),
+  ACCESS_KEY_ID: Joi.string().optional(),
+  SECRET_ACCESS_KEY: Joi.string().optional(),
+  REGION: Joi.string().optional(),
   GOOGLE_CLIENT_ID: Joi.string().required(),
   GOOGLE_CLIENT_SECRET: Joi.string().required(),
 });

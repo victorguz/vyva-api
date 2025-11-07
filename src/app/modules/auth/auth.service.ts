@@ -107,9 +107,12 @@ export class AuthService {
           profilePicture: picture || '',
           isVerified: payload.email_verified ?? false,
         });
+        console.log('createUserResponse', createUserResponse);
+        
         userData = createUserResponse.data;
       } else {
         userData = existingUser[0].toJSON();
+        console.log('userData', userData);
 
         // Update user using UsersService if needed
         if (

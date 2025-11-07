@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import * as moment from 'moment';
 import { InjectModel, Model, TransactionSupport } from 'nestjs-dynamoose';
-import { PaymentMethodType, SalesOrderStatus } from 'src/app/core/constants/domain.constants';
+import { PaymentMethodType, SalesOrderStatus, UserRole } from 'src/app/core/constants/domain.constants';
 import { User } from 'src/app/schemas/user.schema';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -139,7 +139,9 @@ export class SalesOrdersService extends TransactionSupport {
       if (filters?.idCustomer) {
         query = query.where('idCustomer').eq(filters.idCustomer);
       }
-
+      if (!this.isAdmin(user)) {
+        query = query.where('createdBy').eq(user.id);
+      }
       query = query.where('businessInfoId').eq(user.businessInfoId);
       const salesOrders = (await query.exec()).map(
         (order) => order as SalesOrder,
@@ -264,11 +266,11 @@ export class SalesOrdersService extends TransactionSupport {
 
   async getDailySalesCards(
     dateRange: DateRangeReportDto,
-    businessInfoId: string,
+    user: User,
   ): Promise<GenericResponse<SalesReportResponseDto>> {
     try {
       // Validate businessInfoId
-      if (!businessInfoId) {
+      if (!user.businessInfoId) {
         throw new Error('MS014');
       }
 
@@ -284,13 +286,13 @@ export class SalesOrdersService extends TransactionSupport {
       const currentPeriodSales = await this.getSalesInDateRange(
         startDate.toDate(),
         endDate.toDate(),
-        businessInfoId,
+        user,
       );
       // Obtener ventas del período anterior
       const previousPeriodSales = await this.getSalesInDateRange(
         previousStartDate.toDate(),
         previousEndDate.toDate(),
-        businessInfoId,
+        user,
       );
       // Calcular totales
       const currentValue = this.calculateTotalFromSales(currentPeriodSales);
@@ -317,23 +319,25 @@ export class SalesOrdersService extends TransactionSupport {
   private async getSalesInDateRange(
     startDate: Date,
     endDate: Date,
-    businessInfoId: string,
+    user: User,
   ): Promise<SalesOrder[]> {
     try {
       // Validate businessInfoId is not undefined or null
-      if (!businessInfoId) {
+      if (!user.businessInfoId) {
         throw new Error('MS014');
       }
-
-      // Primero obtener todas las ventas del negocio y filtrar en memoria
-      // Esto evita problemas con tipos de datos en DynamoDB
-      const allSalesOrders = await this.model
+      let query = this.model
         .scan()
         .where('businessInfoId')
-        .eq(businessInfoId)
+        .eq(user.businessInfoId)
         .where('createdAt')
-        .between(startDate.getTime(), endDate.getTime())
-        .exec();
+        .between(startDate.getTime(), endDate.getTime());
+
+      if (!this.isAdmin(user)) {
+        query = query.where('createdBy').eq(user.id);
+      }
+
+      const allSalesOrders = await query.exec();
 
       return allSalesOrders.map((order) => order as SalesOrder);
     } catch (error) {
@@ -367,11 +371,11 @@ export class SalesOrdersService extends TransactionSupport {
   }
 
   async getDailyPaymentMethodsSummary(
-    businessInfoId: string,
+    user: User,
   ): Promise<GenericResponse<DailyPaymentMethodsResponseDto>> {
     try {
       // Validate businessInfoId
-      if (!businessInfoId) {
+      if (!user.businessInfoId) {
         throw new Error('MS014');
       }
 
@@ -382,7 +386,7 @@ export class SalesOrdersService extends TransactionSupport {
       const todayOrders = await this.getSalesInDateRange(
         today.toDate(),
         endOfDay.toDate(),
-        businessInfoId,
+        user,
       );
 
       // Calcular el total de ventas del día
@@ -444,5 +448,10 @@ export class SalesOrdersService extends TransactionSupport {
     } catch (error) {
       throw handleError(error);
     }
+  }
+
+
+  private isAdmin(user: User): boolean {
+    return user.role === UserRole.admin || user.role === UserRole.superadmin;
   }
 }
