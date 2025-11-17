@@ -190,4 +190,24 @@ export class ProductsService {
       throw handleError(error);
     }
   }
+
+  async findAllPublic(businessId: string): Promise<GenericResponse<Product[]>> {
+    try {
+      const products = await this.model
+        .scan()
+        .where('businessInfoId')
+        .eq(businessId)
+        .where('isService')
+        .eq(true)
+        .where('status')
+        .eq(ProductStatus.published)
+        .exec();
+
+      return new GenericResponse(
+        products.map((product) => product.toJSON() as Product),
+      );
+    } catch (error) {
+      throw handleError(error);
+    }
+  }
 }

@@ -6,12 +6,13 @@ import { GenericResponse } from '../../core/interfaces/generic-response.interfac
 import { Customer } from '../../schemas/customer.schema';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { AuthGuard } from '../auth/guards/auth.guard';
+import { BusinessIdGuard } from '../auth/guards/businessId.guard';
 import { CustomersService } from './customers.service';
 import { CreateCustomerDto, CustomersCountResponseDto, ListCustomerDto, UpdateCustomerDto } from './dto/customers.dto';
 
 @ApiTags('Customers')
 @Controller('customers')
-@UseGuards(AuthGuard)
+@UseGuards(AuthGuard, BusinessIdGuard)
 export class CustomersController {
   constructor(private readonly customersService: CustomersService) {}
 

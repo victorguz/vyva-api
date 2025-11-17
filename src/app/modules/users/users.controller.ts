@@ -11,11 +11,24 @@ import { UsersService } from './users.service';
 
 @ApiTags('Users')
 @Controller('users')
-@UseGuards(AuthGuard, BusinessIdGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  @Get('public/business/:businessId/employees')
+  @ApiOperation({ summary: 'Get all employees by business ID (public)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Return all employees for a business.',
+    type: GenericResponse<[User]>,
+  })
+  async findEmployeesPublic(
+    @Param('businessId') businessId: string,
+  ): Promise<GenericResponse<User[]>> {
+    return this.usersService.findEmployeesPublic(businessId);
+  }
+
   @Post()
+  @UseGuards(AuthGuard, BusinessIdGuard)
   @ApiOperation({ summary: 'Create a new user' })
   @ApiResponse({
     status: 201,
@@ -30,6 +43,7 @@ export class UsersController {
   }
 
   @Get()
+  @UseGuards(AuthGuard, BusinessIdGuard)
   @ApiOperation({ summary: 'Get all users' })
   @ApiResponse({
     status: 200,
@@ -43,6 +57,7 @@ export class UsersController {
   }
 
   @Get(':id')
+  @UseGuards(AuthGuard, BusinessIdGuard)
   @ApiOperation({ summary: 'Get a user by id' })
   @ApiResponse({
     status: 200,
@@ -57,6 +72,7 @@ export class UsersController {
   }
 
   @Patch(':id')
+  @UseGuards(AuthGuard, BusinessIdGuard)
   @ApiOperation({ summary: 'Update a user' })
   @ApiResponse({
     status: 200,
@@ -72,6 +88,7 @@ export class UsersController {
   }
 
   @Delete(':id')
+  @UseGuards(AuthGuard, BusinessIdGuard)
   @ApiOperation({ summary: 'Delete a user' })
   @ApiResponse({
     status: 200,

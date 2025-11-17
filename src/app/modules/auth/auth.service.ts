@@ -8,6 +8,7 @@ import { User, UserKey } from 'src/app/schemas/user.schema';
 import { handleError } from 'src/app/shared/error.functions';
 import { decrypt } from 'src/app/shared/shared.functions';
 
+import { FilesService } from '../files/files.service';
 import { UsersService } from '../users/users.service';
 import { GoogleSignInDto, RefreshTokenRequest } from './dtos/auth.dto';
 import { AuthResponse, UserResponse } from './interfaces/auth.interfaces';
@@ -22,6 +23,7 @@ export class AuthService {
     private readonly userModel: Model<User, UserKey>,
     private readonly configService: ConfigService,
     private readonly usersService: UsersService,
+    private readonly filesService: FilesService,
   ) {
     const clientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
     this.googleClient = new OAuth2Client(clientId);
@@ -107,12 +109,45 @@ export class AuthService {
           profilePicture: picture || '',
           isVerified: payload.email_verified ?? false,
         });
-        console.log('createUserResponse', createUserResponse);
         
         userData = createUserResponse.data;
+
+        // Download and save Google profile picture if exists and user has businessInfoId
+        if (picture && userData.businessInfoId) {
+          const s3ProfilePictureUrl = await this.downloadAndSaveGoogleProfilePicture(
+            picture,
+            userData.id,
+            userData.businessInfoId,
+          );
+
+          // Update user with S3 URL if download was successful
+          if (s3ProfilePictureUrl) {
+            const updateUserResponse = await this.usersService.updateGoogleUser(
+              userData.id,
+              {
+                googleId: sub,
+                isVerified: payload.email_verified ?? false,
+                profilePicture: s3ProfilePictureUrl,
+              },
+            );
+            userData = updateUserResponse.data;
+          }
+        }
       } else {
         userData = existingUser[0].toJSON();
-        console.log('userData', userData);
+
+        // Download and save Google profile picture if exists, user has businessInfoId, and doesn't already have a profile picture
+        let profilePictureUrl = userData.profilePicture;
+        if (picture && userData.businessInfoId && !userData.profilePicture) {
+          const s3ProfilePictureUrl = await this.downloadAndSaveGoogleProfilePicture(
+            picture,
+            userData.id,
+            userData.businessInfoId,
+          );
+          if (s3ProfilePictureUrl) {
+            profilePictureUrl = s3ProfilePictureUrl;
+          }
+        }
 
         // Update user using UsersService if needed
         if (
@@ -125,7 +160,7 @@ export class AuthService {
             {
               googleId: sub,
               isVerified: payload.email_verified ?? false,
-              profilePicture: userData.profilePicture ?? picture,
+              profilePicture: profilePictureUrl || picture || userData.profilePicture,
             },
           );
           userData = updateUserResponse.data;
@@ -185,5 +220,46 @@ export class AuthService {
       throw handleError(error);
     }
   }
+  /**
+   * Download Google profile picture and save it to S3 bucket
+   * This function is separated to keep it isolated from the main login flow
+   * @param pictureUrl Google profile picture URL
+   * @param userId User ID
+   * @param businessInfoId Business ID to organize files in S3
+   * @returns S3 URL of the uploaded profile picture, or null if download fails
+   */
+  private async downloadAndSaveGoogleProfilePicture(
+    pictureUrl: string | undefined,
+    userId: string,
+    businessInfoId: string | undefined,
+  ): Promise<string | null> {
+    try {
+      // Skip if no profile picture URL or no businessInfoId
+      if (!pictureUrl || !businessInfoId) {
+        return null;
+      }
+
+      // Generate a unique file name based on user ID and timestamp
+      const timestamp = Date.now();
+      const fileExtension = pictureUrl.split('.').pop()?.split('?')[0] || 'jpg';
+      const fileName = `profile-picture-${userId}-${timestamp}.${fileExtension}`;
+
+      // Download and upload to S3
+      const file = await this.filesService.uploadFileFromUrl(
+        pictureUrl,
+        fileName,
+        businessInfoId,
+        userId,
+        'profile-pictures',
+      );
+
+      return file.url;
+    } catch (error) {
+      // Log error but don't throw - profile picture download is not critical
+      console.error('Failed to download and save Google profile picture:', error);
+      return null;
+    }
+  }
+
   // Removed code-exchange flow; we only accept ID tokens at /public/google
 }

@@ -31,6 +31,15 @@ provider:
           Resource:
             - arn:aws:dynamodb:${self:provider.region}:754881596744:table/${self:provider.stage}-vyva-*
             - arn:aws:dynamodb:${self:provider.region}:754881596744:table/${self:provider.stage}-vyva-*/index/*
+        - Effect: Allow
+          Action:
+            - s3:PutObject
+            - s3:GetObject
+            - s3:DeleteObject
+            - s3:ListBucket
+          Resource:
+            - arn:aws:s3:::${self:provider.stage}-vyva-files
+            - arn:aws:s3:::${self:provider.stage}-vyva-files/*
 
 package:
   excludeDevDependencies: true
@@ -83,6 +92,30 @@ functions:
       REGION: ${ssm:REGION}
       GOOGLE_CLIENT_ID: ${ssm:GOOGLE_CLIENT_ID_${upper(${self:provider.stage})}}
       GOOGLE_CLIENT_SECRET: ${ssm:GOOGLE_CLIENT_SECRET_${upper(${self:provider.stage})}}
+      S3_BUCKET_NAME: ${self:provider.stage}-vyva-files
+resources:
+  Resources:
+    VyvaFilesBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:provider.stage}-vyva-files
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: true
+          BlockPublicPolicy: true
+          IgnorePublicAcls: true
+          RestrictPublicBuckets: true
+        CorsConfiguration:
+          CorsRules:
+            - AllowedHeaders:
+                - '*'
+              AllowedMethods:
+                - GET
+                - PUT
+                - POST
+                - DELETE
+              AllowedOrigins:
+                - '*'
+              MaxAge: 3000
 plugins:
   - serverless-deployment-bucket
   - serverless-stage-manager

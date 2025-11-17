@@ -6,7 +6,10 @@ import { dynamooseConfig } from './core/config/dynamoose.config';
 import { configModuleOptions } from './core/config/environment.config';
 import { AppointmentsModule } from './modules/appointments/appointments.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { BusinessesModule } from './modules/businesses/businesses.module';
 import { CustomersModule } from './modules/customers/customers.module';
+import { FilesModule } from './modules/files/files.module';
+import { IntegrationsModule } from './modules/integrations/integrations.module';
 import { ProductsModule } from './modules/products/products.module';
 import { ProfileModule } from './modules/profile/profile.module';
 import { SalesOrdersModule } from './modules/sales-orders/sales-orders.module';
@@ -28,6 +31,9 @@ import { UsersModule } from './modules/users/users.module';
     ProfileModule,
     SalesOrdersModule,
     AppointmentsModule,
+    IntegrationsModule,
+    FilesModule,
+    BusinessesModule,
   ],
 })
 export class AppModule {}

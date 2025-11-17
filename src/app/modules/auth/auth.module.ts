@@ -4,8 +4,9 @@ import { JwtModule } from '@nestjs/jwt';
 import { DynamooseModule } from 'nestjs-dynamoose';
 import { JWT_EXPIRATION } from 'src/app/core/config/environment.config';
 import { UserSchema } from 'src/app/schemas/user.schema';
-import { SharedModule } from 'src/app/shared/shared.module';
 
+import { FilesModule } from '../files/files.module';
+import { SharedModule } from '../shared/shared.module';
 import { UsersModule } from '../users/users.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
@@ -14,6 +15,7 @@ import { AuthService } from './auth.service';
   imports: [
     SharedModule,
     UsersModule,
+    FilesModule,
     ConfigModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],

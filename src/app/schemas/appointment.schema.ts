@@ -18,6 +18,7 @@ export interface Appointment extends AppointmentKey {
   businessInfoId?: string;
   createdBy?: string;
   modifiedBy?: string;
+  googleCalendarEventId?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -95,6 +96,10 @@ export const AppointmentSchema = new Schema(
       required: false,
     },
     modifiedBy: {
+      type: String,
+      required: false,
+    },
+    googleCalendarEventId: {
       type: String,
       required: false,
     },

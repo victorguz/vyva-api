@@ -6,6 +6,7 @@ import { SalesOrder } from '../../schemas/sales-order.schema';
 import { User } from '../../schemas/user.schema';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { AuthGuard } from '../auth/guards/auth.guard';
+import { BusinessIdGuard } from '../auth/guards/businessId.guard';
 import {
   CreateSalesOrderDto,
   DailyPaymentMethodsResponseDto,
@@ -19,6 +20,7 @@ import { SalesOrdersService } from './sales-orders.service';
 
 @ApiTags('Sales Orders')
 @Controller('sales-orders')
+@UseGuards(AuthGuard, BusinessIdGuard)
 export class SalesOrdersController {
   constructor(private readonly salesOrdersService: SalesOrdersService) {}
 

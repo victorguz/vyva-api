@@ -8,6 +8,15 @@ export enum Environment {
   Production = 'prd',
   Quality = 'qas',
 }
+
+export const EnvironmentValues = {
+  domain: {
+    [Environment.Development]: 'http://localhost:4200',
+    [Environment.Quality]: 'https://qas.vyvapos.com',
+    [Environment.Production]: 'https://app.vyvapos.com',
+  },
+};
+
 export const JWT_EXPIRATION =
   process.env.NODE_ENV == Environment.Development ? '7d' : '24h';
 
@@ -90,6 +99,14 @@ export class EnvironmentVariables {
 
   @IsString()
   GOOGLE_CLIENT_SECRET: string;
+
+  @IsOptional()
+  @IsString()
+  GOOGLE_CALENDAR_REDIRECT_URI?: string;
+
+  @IsOptional()
+  @IsString()
+  FRONTEND_URL?: string;
 }
 const validationSchema = Joi.object({
   NODE_ENV: Joi.string(),
@@ -116,6 +133,8 @@ const validationSchema = Joi.object({
   REGION: Joi.string().optional(),
   GOOGLE_CLIENT_ID: Joi.string().required(),
   GOOGLE_CLIENT_SECRET: Joi.string().required(),
+  GOOGLE_CALENDAR_REDIRECT_URI: Joi.string().optional(),
+  FRONTEND_URL: Joi.string().optional(),
 });
 function validate(config: Record<string, unknown>) {
   const validatedConfig = plainToInstance(EnvironmentVariables, config, {

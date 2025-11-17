@@ -25,8 +25,7 @@ export class UsersService {
         .exec();
       return new GenericResponse(
         users.map((user) => {
-          const userData = user.toJSON() as User;
-          delete userData.password;
+          const userData = user.serialize('frontend') as User;
           return userData;
         }),
       );
@@ -99,6 +98,7 @@ export class UsersService {
       }
 
       // Create the user
+      // businessInfoId is only assigned when a business is created, not when a user is created
       const now = new Date();
       const newUser = await this.model.create({
         id: uuidv4(),
@@ -112,12 +112,12 @@ export class UsersService {
         isVerified: false,
         createdAt: now,
         updatedAt: now,
-        businessInfoId: currentUser.businessInfoId,
+        // businessInfoId is only assigned when a business is created
+        businessInfoId: body.businessInfoId || undefined,
         apiKey: encrypt(uuidv4()),
       });
 
-      const userData = newUser.toJSON() as User;
-      delete userData.password;
+      const userData = newUser.serialize('frontend') as User;
       return new GenericResponse<User>(userData);
     } catch (error) {
       throw handleError(error);
@@ -143,7 +143,10 @@ export class UsersService {
         throw new Error('MS007');
       }
 
-      if (updateUserDto.email) {
+      if (
+        updateUserDto.email &&
+        currentUserResult[0].email !== updateUserDto.email
+      ) {
         const currentEmailResult = await this.model
           .scan()
           .where('email')
@@ -160,8 +163,7 @@ export class UsersService {
         updateData.password = encrypt(updateUserDto.password);
       }
       const updatedUser = await this.model.update({ id }, updateData);
-      const userData = updatedUser.toJSON() as User;
-      delete userData.password;
+      const userData = updatedUser.serialize('frontend') as User;
       return new GenericResponse(userData);
     } catch (error) {
       throw handleError(error);
@@ -187,8 +189,7 @@ export class UsersService {
         apiKey: encrypt(uuidv4()),
       });
 
-      const userData = newUser.toJSON() as User;
-      delete userData.password;
+      const userData = newUser.serialize('frontend') as User;
       return new GenericResponse<User>(userData);
     } catch (error) {
       throw handleError(error);
@@ -200,8 +201,7 @@ export class UsersService {
     updateUserDto: UpdateGoogleUserDto,
   ): Promise<GenericResponse<User>> {
     try {
-    
-      const updatedUser =   await this.model.update(
+      const updatedUser = await this.model.update(
         { id },
         {
           googleId: updateUserDto.googleId,
@@ -209,8 +209,33 @@ export class UsersService {
           profilePicture: updateUserDto.profilePicture,
         },
       );
-      const userData = updatedUser?.serialize("frontend") as User;
+      const userData = updatedUser?.serialize('frontend') as User;
       return new GenericResponse<User>(userData);
+    } catch (error) {
+      throw handleError(error);
+    }
+  }
+
+  async findEmployeesPublic(
+    businessId: string,
+  ): Promise<GenericResponse<User[]>> {
+    try {
+      const users = await this.model
+        .scan()
+        .where('businessInfoId')
+        .eq(businessId)
+        .where('role')
+        .in([UserRole.employee])
+        .where('status')
+        .eq(true)
+        .exec();
+
+      return new GenericResponse(
+        users.map((user) => {
+          const userData = user.serialize('frontend') as User;
+          return userData;
+        }),
+      );
     } catch (error) {
       throw handleError(error);
     }
