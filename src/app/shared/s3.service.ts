@@ -78,18 +78,27 @@ export class S3Service {
   }
 
   /**
-   * Generate S3 key (path) for a file based on businessId
+   * Generate S3 key (path) for a file based on businessId and folder
    * @param businessId Business ID
    * @param fileName File name
+   * @param folder Folder type: 'public' or 'private'
    * @param prefix Optional prefix (e.g., 'profile-pictures', 'documents')
    * @returns S3 key
    */
-  generateKey(businessId: string, fileName: string, prefix?: string): string {
+  generateKey(
+    businessId: string,
+    fileName: string,
+    folder: 'public' | 'private',
+    prefix?: string,
+  ): string {
     const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const timestamp = Date.now();
+    const uniqueFileName = `${timestamp}_${sanitizedFileName}`;
+    
     if (prefix) {
-      return `${businessId}/${prefix}/${sanitizedFileName}`;
+      return `${businessId}/${folder}/${prefix}/${uniqueFileName}`;
     }
-    return `${businessId}/${sanitizedFileName}`;
+    return `${businessId}/${folder}/${uniqueFileName}`;
   }
 
   /**

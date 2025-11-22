@@ -83,22 +83,6 @@ export class CreateProductDto {
   isService!: boolean;
 
   @ApiProperty({
-    description: 'Whether the product is a subscription',
-    example: true,
-  })
-  @IsBoolean()
-  isSubscription!: boolean;
-
-  @ApiProperty({
-    description: 'Number of days for subscription',
-    example: 30,
-    required: false,
-  })
-  @IsNumber()
-  @IsOptional()
-  subscriptionDays?: number;
-
-  @ApiProperty({
     description: 'Whether the product requires stock management',
     example: false,
     required: false,
@@ -218,14 +202,6 @@ export class UpdateProductDto implements Partial<CreateProductDto> {
   @IsOptional()
   isService?: boolean;
 
-  @ApiProperty({
-    description: 'Whether the product is a subscription',
-    example: true,
-    required: false,
-  })
-  @IsBoolean()
-  @IsOptional()
-  isSubscription?: boolean;
 
   @ApiProperty({
     description: 'Number of days for subscription',
@@ -233,9 +209,6 @@ export class UpdateProductDto implements Partial<CreateProductDto> {
     required: false,
   })
   @IsNumber()
-  @IsOptional()
-  subscriptionDays?: number;
-
   @ApiProperty({
     description: 'Whether the product requires stock management',
     example: false,
@@ -310,14 +283,7 @@ export class ListProductDto {
   @IsOptional()
   sku?: string;
 
-  @ApiProperty({
-    description: 'Whether the product is a subscription',
-    example: true,
-    required: false,
-  })
-  @IsBoolean()
-  @IsOptional()
-  isSubscription?: boolean;
+
 
   @ApiProperty({
     description: 'Whether the product requires stock management',
@@ -349,8 +315,6 @@ export class ProductResponseDto implements Product {
   sku?: string;
   status: ProductStatus;
   isService: boolean;
-  isSubscription: boolean;
-  subscriptionDays?: number;
   requireStock?: boolean;
   price?: number;
   offerPrice?: number;

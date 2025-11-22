@@ -8,6 +8,7 @@ import { AppointmentsModule } from './modules/appointments/appointments.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { BusinessesModule } from './modules/businesses/businesses.module';
 import { CustomersModule } from './modules/customers/customers.module';
+import { DomainsModule } from './modules/domains/domains.module';
 import { FilesModule } from './modules/files/files.module';
 import { IntegrationsModule } from './modules/integrations/integrations.module';
 import { ProductsModule } from './modules/products/products.module';
@@ -34,6 +35,7 @@ import { UsersModule } from './modules/users/users.module';
     IntegrationsModule,
     FilesModule,
     BusinessesModule,
+    DomainsModule,
   ],
 })
 export class AppModule {}

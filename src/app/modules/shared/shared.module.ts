@@ -11,6 +11,7 @@ import { SalesOrderSchema } from 'src/app/schemas/sales-order.schema';
 import { JWT_EXPIRATION } from '../../core/config/environment.config';
 import { BusinessSchema } from '../../schemas/business.schema';
 import { CustomerSchema } from '../../schemas/customer.schema';
+import { DomainSchema } from '../../schemas/domain.schema';
 import { FileSchema } from '../../schemas/file.schema';
 import { UserSchema } from '../../schemas/user.schema';
 import { S3Service } from '../../shared/s3.service';
@@ -111,6 +112,13 @@ import { AuthGuard } from '../auth/guards/auth.guard';
         schema: BusinessSchema,
         options: {
           tableName: 'businesses',
+        },
+      },
+      {
+        name: 'Domain',
+        schema: DomainSchema,
+        options: {
+          tableName: 'domains',
         },
       },
     ]),

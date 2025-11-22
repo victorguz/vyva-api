@@ -16,8 +16,6 @@ export interface Product extends ProductKey {
   sku?: string;
   status: ProductStatus;
   isService: boolean;
-  isSubscription: boolean;
-  subscriptionDays?: number;
   requireStock?: boolean;
   price?: number;
   offerPrice?: number;
@@ -76,14 +74,6 @@ export const ProductSchema = new Schema(
       enum: Object.values(ProductStatus),
       required: true,
       default: ProductStatus.draft,
-    },
-    isSubscription: {
-      type: Boolean,
-      required: true,
-    },
-    subscriptionDays: {
-      type: Number,
-      required: false,
     },
     isService:{
       type: Boolean,

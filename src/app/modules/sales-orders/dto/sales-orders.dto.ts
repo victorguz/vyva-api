@@ -27,10 +27,6 @@ export class SalesOrderItemDto implements SalesOrderItem {
   @IsNotEmpty()
   quantity: number;
 
-  @ApiProperty({ description: 'Product is subscription' })
-  @IsBoolean()
-  @IsOptional()
-  isSubscription?: boolean;
   @ApiProperty({ description: 'Product is service' })
   @IsBoolean()
   @IsOptional()

@@ -66,8 +66,6 @@ export class ProductsService {
         sku: body.sku || undefined,
         status: body.status,
         isService: body.isService,
-        isSubscription: body.isSubscription,
-        subscriptionDays: body.subscriptionDays || undefined,
         requireStock: body.requireStock,
         price: body.price || undefined,
         offerPrice: body.offerPrice || undefined,

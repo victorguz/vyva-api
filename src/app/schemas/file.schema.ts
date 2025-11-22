@@ -7,6 +7,8 @@ export interface FileKey {
 export interface File extends FileKey {
   fileName: string;
   url: string;
+  route: string; // S3 key/path
+  folder: 'public' | 'private'; // Folder type: public or private
   mimeType?: string;
   size?: number;
   businessInfoId: string;
@@ -29,6 +31,15 @@ export const FileSchema = new Schema(
     url: {
       type: String,
       required: true,
+    },
+    route: {
+      type: String,
+      required: true,
+    },
+    folder: {
+      type: String,
+      required: true,
+      enum: ['public', 'private'],
     },
     mimeType: {
       type: String,

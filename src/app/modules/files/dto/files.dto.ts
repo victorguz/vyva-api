@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class CreateFileDto {
   @ApiProperty({
@@ -12,11 +12,30 @@ export class CreateFileDto {
 
   @ApiProperty({
     description: 'File URL (S3 URL)',
-    example: 'https://bucket.s3.amazonaws.com/businessId/profile-pictures/file.jpg',
+    example: 'https://bucket.s3.amazonaws.com/businessId/public/file.jpg',
   })
   @IsString()
   @IsNotEmpty()
   url!: string;
+
+  @ApiProperty({
+    description: 'S3 route/key',
+    example: 'businessId/public/file.jpg',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  route?: string;
+
+  @ApiProperty({
+    description: 'Folder type: public or private',
+    example: 'public',
+    enum: ['public', 'private'],
+    required: false,
+  })
+  @IsEnum(['public', 'private'])
+  @IsOptional()
+  folder?: 'public' | 'private';
 
   @ApiProperty({
     description: 'MIME type of the file',
@@ -100,5 +119,32 @@ export class ListFileDto {
   @IsString()
   @IsOptional()
   fileName?: string;
+
+  @ApiProperty({
+    description: 'Folder type: public or private',
+    example: 'public',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  folder?: 'public' | 'private';
+}
+
+export class UploadFileDto {
+  @ApiProperty({
+    description: 'Folder type: public or private',
+    example: 'public',
+    enum: ['public', 'private'],
+  })
+  @IsEnum(['public', 'private'])
+  @IsNotEmpty()
+  folder!: 'public' | 'private';
+
+  @ApiProperty({
+    type: 'string',
+    format: 'binary',
+    description: 'File to upload',
+  })
+  file!: Express.Multer.File;
 }
 

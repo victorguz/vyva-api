@@ -529,6 +529,16 @@ The API is fully documented using Swagger/OpenAPI. Once deployed or running loca
 - `GET /api/profile` - Get user profile
 - `PATCH /api/profile` - Update user profile
 
+#### Domains
+
+- `GET /api/domains` - List domains (filtered by authenticated user's business)
+- `GET /api/domains?group=finance` - List domains by group
+- `GET /api/domains?isActive=true` - List active domains
+- `POST /api/domains` - Create domain
+- `GET /api/domains/:id` - Get domain by ID
+- `PATCH /api/domains/:id` - Update domain
+- `DELETE /api/domains/:id` - Deactivate domain
+
 ## 🔒 Security
 
 - JWT-based authentication
@@ -537,6 +547,7 @@ The API is fully documented using Swagger/OpenAPI. Once deployed or running loca
 - CORS configuration
 - Request IP tracking
 - Secure password handling
+- **Security Best Practice**: Private APIs automatically extract `businessInfoId` from the authenticated user's JWT token rather than accepting it as a query parameter, preventing unauthorized access to other businesses' data
 
 ## 📈 Monitoring & Logging
 

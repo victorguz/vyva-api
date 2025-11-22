@@ -64,6 +64,8 @@ export class FilesService {
         id: uuidv4(),
         fileName: body.fileName,
         url: body.url,
+        route: body.route || body.url, // Use route if provided, otherwise extract from url
+        folder: body.folder || 'private',
         mimeType: body.mimeType,
         size: body.size,
         businessInfoId: currentUser.businessInfoId,
@@ -73,6 +75,76 @@ export class FilesService {
       });
 
       return new GenericResponse(newFile.toJSON() as File);
+    } catch (error) {
+      throw handleError(error);
+    }
+  }
+
+  /**
+   * Upload a file directly to S3 and save the record
+   * @param file File buffer and metadata
+   * @param folder Folder type: 'public' or 'private'
+   * @param currentUser Current user
+   * @returns File record
+   */
+  async uploadFile(
+    file: Express.Multer.File,
+    folder: 'public' | 'private',
+    currentUser: User,
+  ): Promise<GenericResponse<File>> {
+    try {
+      const fileBuffer = Buffer.from(file.buffer);
+      const fileName = file.originalname;
+      const contentType = file.mimetype;
+
+      // Generate S3 key with folder structure: businessId/folder/filename
+      const key = this.s3Service.generateKey(
+        currentUser.businessInfoId,
+        fileName,
+        folder,
+      );
+
+      // Upload to S3
+      const s3Url = await this.s3Service.uploadFile(fileBuffer, key, contentType);
+
+      // Save file record
+      const now = new Date();
+      const newFile = await this.model.create({
+        id: uuidv4(),
+        fileName,
+        url: s3Url,
+        route: key,
+        folder,
+        mimeType: contentType,
+        size: file.size,
+        businessInfoId: currentUser.businessInfoId,
+        uploadedBy: currentUser.id,
+        createdAt: now,
+        updatedAt: now,
+      });
+
+      return new GenericResponse(newFile.toJSON() as File);
+    } catch (error) {
+      throw handleError(error);
+    }
+  }
+
+  async findAllByFolder(
+    folder: 'public' | 'private',
+    currentUser: User,
+  ): Promise<GenericResponse<File[]>> {
+    try {
+      const files = await this.model
+        .scan()
+        .where('businessInfoId')
+        .eq(currentUser.businessInfoId)
+        .where('folder')
+        .eq(folder)
+        .exec();
+
+      return new GenericResponse(
+        files.map((file) => file.toJSON() as File),
+      );
     } catch (error) {
       throw handleError(error);
     }
@@ -161,8 +233,8 @@ export class FilesService {
       // Download file from URL
       const { buffer, contentType } = await this.s3Service.downloadFileFromUrl(url);
 
-      // Generate S3 key
-      const key = this.s3Service.generateKey(businessId, fileName, prefix);
+      // Generate S3 key with folder (default to private)
+      const key = this.s3Service.generateKey(businessId, fileName, 'private', prefix);
 
       // Upload to S3
       const s3Url = await this.s3Service.uploadFile(buffer, key, contentType);
@@ -173,6 +245,8 @@ export class FilesService {
         id: uuidv4(),
         fileName,
         url: s3Url,
+        route: key,
+        folder: 'private', // Default to private for URL uploads
         mimeType: contentType,
         size: buffer.length,
         businessInfoId: businessId,
