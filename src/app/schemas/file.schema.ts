@@ -34,11 +34,11 @@ export const FileSchema = new Schema(
     },
     route: {
       type: String,
-      required: true,
+      required: false,
     },
     folder: {
       type: String,
-      required: true,
+      required: false,
       enum: ['public', 'private'],
     },
     mimeType: {

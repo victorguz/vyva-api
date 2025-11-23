@@ -1,4 +1,16 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import {
+    Body,
+    Controller,
+    Delete,
+    Get,
+    Param,
+    Patch,
+    Post,
+    Query,
+    UploadedFile,
+    UseGuards,
+    UseInterceptors,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiConsumes, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
@@ -8,7 +20,7 @@ import { User } from '../../schemas/user.schema';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { BusinessIdGuard } from '../auth/guards/businessId.guard';
-import { CreateFileDto, ListFileDto, UpdateFileDto, UploadFileDto } from './dto/files.dto';
+import { CreateFileDto, ListFileDto, UpdateFileDto } from './dto/files.dto';
 import { FilesService } from './files.service';
 
 @ApiTags('Files')
@@ -31,6 +43,29 @@ export class FilesController {
     return this.filesService.create(createFileDto, currentUser);
   }
 
+  @Post('upload')
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Upload a file directly to S3' })
+  @ApiResponse({
+    status: 201,
+    description: 'The file has been successfully uploaded.',
+    type: GenericResponse<File>,
+  })
+  async uploadFile(
+    @UploadedFile() file: any,
+    @Body('folder') folder: 'public' | 'private',
+    @CurrentUser() currentUser: User,
+  ): Promise<GenericResponse<File>> {
+    if (!file) {
+      throw new Error('File is required');
+    }
+    if (!folder || (folder !== 'public' && folder !== 'private')) {
+      throw new Error('Folder must be either "public" or "private"');
+    }
+    return this.filesService.uploadFile(file, folder, currentUser);
+  }
+
   @Get()
   @ApiOperation({ summary: 'Get all files' })
   @ApiResponse({
@@ -46,29 +81,6 @@ export class FilesController {
       return this.filesService.findAllByFolder(query.folder, currentUser);
     }
     return this.filesService.findAll(currentUser);
-  }
-
-  @Post('upload')
-  @UseInterceptors(FileInterceptor('file'))
-  @ApiConsumes('multipart/form-data')
-  @ApiOperation({ summary: 'Upload a file directly to S3' })
-  @ApiResponse({
-    status: 201,
-    description: 'The file has been successfully uploaded.',
-    type: GenericResponse<File>,
-  })
-  async uploadFile(
-    @UploadedFile() file: Express.Multer.File,
-    @Body('folder') folder: 'public' | 'private',
-    @CurrentUser() currentUser: User,
-  ): Promise<GenericResponse<File>> {
-    if (!file) {
-      throw new Error('File is required');
-    }
-    if (!folder || (folder !== 'public' && folder !== 'private')) {
-      throw new Error('Folder must be either "public" or "private"');
-    }
-    return this.filesService.uploadFile(file, folder, currentUser);
   }
 
   @Get(':id')
@@ -114,4 +126,3 @@ export class FilesController {
     return this.filesService.remove(id, currentUser);
   }
 }
-

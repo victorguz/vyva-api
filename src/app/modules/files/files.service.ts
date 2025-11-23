@@ -88,7 +88,7 @@ export class FilesService {
    * @returns File record
    */
   async uploadFile(
-    file: Express.Multer.File,
+    file: any,
     folder: 'public' | 'private',
     currentUser: User,
   ): Promise<GenericResponse<File>> {
@@ -138,6 +138,7 @@ export class FilesService {
         .scan()
         .where('businessInfoId')
         .eq(currentUser.businessInfoId)
+        .and()
         .where('folder')
         .eq(folder)
         .exec();
