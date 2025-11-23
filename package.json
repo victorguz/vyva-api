@@ -23,14 +23,13 @@
     "logs:dev": "serverless logs -t -f api --stage dev",
     "logs:qas": "serverless logs -t -f api --stage qas",
     "logs:prd": "serverless logs -t -f api --stage prd",
-    "deploy:qas": "nest build && serverless deploy function -f api --stage qas",
-    "deploy:prd": "nest build && serverless deploy function -f api --stage prd",
+    "build:image:qas": "node scripts/build-and-push-image.js qas",
+    "build:image:prd": "node scripts/build-and-push-image.js prd",
+    "deploy:qas": "nest build && npm run build:image:qas && serverless deploy --stage qas",
+    "deploy:prd": "nest build && npm run build:image:prd && serverless deploy --stage prd",
     "deploy:all": "npm run deploy:qas && npm run deploy:prd",
-    "deploy:qas:force": "nest build && serverless deploy --stage qas",
-    "deploy:prd:force": "nest build && serverless deploy --stage prd",
-    "deploy:all:force": "npm run deploy:qas:force && npm run deploy:prd:force",
-    "generate:layer": "node generate-layer.js",
-    "generate:layer2": "echo Se removerá la carpeta nodejs si existe && rmdir /S nodejs 2> nul & echo Se creará la carpeta nodejs si no existe && mkdir nodejs && echo Se copiará package.json y package-lock.json a la ruta /nodejs && xcopy package.json nodejs && xcopy package-lock.json nodejs && echo Nos trasladamos a la ruta /nodejs && cd nodejs && echo Descargamos los módulos de producción && npm install --only=prod && echo Eliminamos package.json y package-lock.json que copiamos previamente && cd.. && del /f nodejs\\package.json && del /f nodejs\\package-lock.json && echo Eliminaremos layer.zip si existe && del /S layer.zip && echo Comprimiendo layer.zip... && powershell; Compress-Archive .\\nodejs layer && echo Eliminamos la carpeta nodejs && rmdir /S nodejs 2> nul"
+    "deploy:qas:function": "nest build && npm run build:image:qas && serverless deploy function -f api --stage qas",
+    "deploy:prd:function": "nest build && npm run build:image:prd && serverless deploy function -f api --stage prd"
   },
   "dependencies": {
     "@nestjs/axios": "^4.0.0",
@@ -42,7 +41,6 @@
     "@nestjs/platform-express": "^11.1.0",
     "@nestjs/swagger": "^11.2.0",
     "@types/uuid": "^10.0.0",
-    "@aws-sdk/client-s3": "^3.0.0",
     "aws-lambda": "^1.0.7",
     "aws-serverless-express": "^3.4.0",
     "axios": "^1.9.0",
