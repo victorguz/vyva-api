@@ -14,17 +14,22 @@ const cors = {
   methods: 'POST,OPTIONS,GET,PUT,PATCH,DELETE',
   allowedHeaders:
     'Content-Type, Accept, Authorization, X-Requested-With, Application, Origin, Access-Control-Allow-Origin, Access-Control-Allow-Credentials',
+  credentials: true,
 };
 
 function getOrigin() {
   switch (process.env.NODE_ENV) {
     case 'prd':
       return ['https://app.vyvapos.com', 'https://n8n.solaradev.com'];
-    case 'dev':
     case 'qas':
+      return [
+        'https://qas.vyvapos.com',
+        'http://localhost:4200',
+        'http://localhost:3000',
+      ];
+    case 'dev':
     default:
-      return '*';
-    // return 'https://qas.d2mrz2vv88ypo1.amplifyapp.com';
+      return ['http://localhost:4200', 'http://localhost:3000'];
   }
 }
 
@@ -63,7 +68,6 @@ async function bootstrap(
     }),
   );
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
-  app.enableCors();
 
   const config = new DocumentBuilder()
     .setTitle('Vyva Backend')
