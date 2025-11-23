@@ -9,29 +9,36 @@ import * as requestIp from 'request-ip';
 
 import { AppModule } from './app/app.module';
 
-const cors = {
-  origin: getOrigin(),
-  methods: 'POST,OPTIONS,GET,PUT,PATCH,DELETE',
-  allowedHeaders:
-    'Content-Type, Accept, Authorization, X-Requested-With, Application, Origin, Access-Control-Allow-Origin, Access-Control-Allow-Credentials',
-  credentials: true,
-};
-
-function getOrigin() {
+function getAllowedOrigin(): string {
   switch (process.env.NODE_ENV) {
     case 'prd':
-      return ['https://app.vyvapos.com', 'https://n8n.solaradev.com'];
+      return 'https://app.vyvapos.com';
     case 'qas':
-      return [
-        'https://qas.vyvapos.com',
-        'http://localhost:4200',
-        'http://localhost:3000',
-      ];
+      return 'https://qas.vyvapos.com';
     case 'dev':
     default:
-      return ['http://localhost:4200', 'http://localhost:3000'];
+      return 'http://localhost:4200';
   }
 }
+
+const cors = {
+  origin: getAllowedOrigin(),
+  methods: 'POST,OPTIONS,GET,PUT,PATCH,DELETE',
+  allowedHeaders: [
+    'Content-Type',
+    'Accept',
+    'Authorization',
+    'X-Requested-With',
+    'Application',
+    'Origin',
+    'Access-Control-Allow-Origin',
+    'Access-Control-Allow-Credentials',
+  ],
+  exposedHeaders: ['Authorization'],
+  credentials: true,
+  preflightContinue: false,
+  optionsSuccessStatus: 204,
+};
 
 async function bootstrap(
   expressApp: Express | undefined = undefined,
