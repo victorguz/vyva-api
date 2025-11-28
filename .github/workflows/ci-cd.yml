@@ -5,31 +5,21 @@ on:
     branches: ['prd', 'qas']
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Use Node.js 20
+      - name: Use Node.js 18.13.0
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_IAM_KEY }}
-          aws-secret-access-key: ${{ secrets.AWS_IAM_SECRET }}
-          aws-region: us-east-1
-
+          node-version: 18.13.0
       - name: Installing dependencies
         run: npm ci
-
-      - name: Building application
-        run: npm run build
-
-      - name: Deploy with serverless (builds and pushes Docker image automatically)
-        run: npx serverless deploy --stage ${{ github.ref_name }}
+      - name: Building
+        run: npm run build --if-present
+      - name: Deploy with serverless
         env:
-          DOCKER_BUILDKIT: 1
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_IAM_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_IAM_SECRET }}
+        run: npx serverless deploy --stage ${{ github.ref_name }}

@@ -4,14 +4,11 @@ useDotenv: true
 
 provider:
   name: aws
+  runtime: nodejs20.x
   memorySize: ${self:custom.MEMORYSIZE.${self:provider.stage}}
   timeout: 30
   stage: ${opt:stage,'dev'}
   region: us-east-1
-  ecr:
-    images:
-      vyva-api-image:
-        uri: ${aws:accountId}.dkr.ecr.${self:provider.region}.amazonaws.com/vyva-api:${self:provider.stage}
   apiGateway:
     shouldStartNameWithService: true
   deploymentBucket:
@@ -43,17 +40,6 @@ provider:
           Resource:
             - arn:aws:s3:::${self:provider.stage}-vyva-files
             - arn:aws:s3:::${self:provider.stage}-vyva-files/*
-        - Effect: Allow
-          Action:
-            - ecr:GetAuthorizationToken
-            - ecr:BatchCheckLayerAvailability
-            - ecr:GetDownloadUrlForLayer
-            - ecr:BatchGetImage
-            - ecr:PutImage
-            - ecr:InitiateLayerUpload
-            - ecr:UploadLayerPart
-            - ecr:CompleteLayerUpload
-          Resource: '*'
 
 package:
   excludeDevDependencies: true
@@ -71,8 +57,7 @@ custom:
     prd: ${ssm:LAMBDA_MEMORYSIZE_${upper(${self:provider.stage})}}
 functions:
   api:
-    image:
-      name: vyva-api-image
+    handler: dist/lambda.handler
     events:
       - http:
           path: /
@@ -80,6 +65,8 @@ functions:
       - http:
           path: /{proxy+}
           method: ANY
+    layers:
+      - arn:aws:lambda:us-east-1:754881596744:layer:vyva-auth:1
     environment:
       NODE_ENV: ${self:provider.stage}
       PORT: 3000
