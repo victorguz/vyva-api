@@ -5,14 +5,14 @@ useDotenv: true
 provider:
   name: aws
   runtime: nodejs20.x
-  memorySize: ${self:custom.MEMORYSIZE.${self:provider.stage}}
+  memorySize: ${ssm:/vyva/${self:provider.stage}/VYVA_LAMBDA_MEMORYSIZE}
   timeout: 30
   stage: ${opt:stage,'dev'}
   region: us-east-1
   apiGateway:
     shouldStartNameWithService: true
   deploymentBucket:
-    name: vyva-api-deployment-bucket
+    name: vyva-deployment-bucket
   iam:
     role:
       statements:
@@ -40,21 +40,32 @@ provider:
           Resource:
             - arn:aws:s3:::${self:provider.stage}-vyva-files
             - arn:aws:s3:::${self:provider.stage}-vyva-files/*
+        - Effect: Allow
+          Action:
+            - s3:PutObject
+            - s3:GetObject
+            - s3:DeleteObject
+            - s3:ListBucket
+          Resource:
+            - arn:aws:s3:::vyva-deployment-bucket
+            - arn:aws:s3:::vyva-deployment-bucket/*
+        - Effect: Allow
+          Action:
+            - ssm:GetParameter
+            - ssm:GetParameters
+            - ssm:GetParametersByPath
+          Resource:
+            - arn:aws:ssm:${self:provider.region}:*:parameter/vyva/${self:provider.stage}/*
 
 package:
   excludeDevDependencies: true
   patterns:
     - '!**'
     - 'dist/**'
-custom:
-  stages:
-    - dev
-    - qas
-    - prd
-  MEMORYSIZE:
-    dev: ${ssm:LAMBDA_MEMORYSIZE_${upper(${self:provider.stage})}}
-    qas: ${ssm:LAMBDA_MEMORYSIZE_${upper(${self:provider.stage})}}
-    prd: ${ssm:LAMBDA_MEMORYSIZE_${upper(${self:provider.stage})}}
+# custom:
+#   stages:
+#     - qas
+#     - prd
 functions:
   api:
     handler: dist/lambda.handler
@@ -72,50 +83,59 @@ functions:
       PORT: 3000
       ERROR_LOGS: true
 
-      DB_DIALECT: ${ssm:DB_DIALECT}
-      DB_USER: ${ssm:DB_USER_${upper(${self:provider.stage})}}
-      DB_PASSWORD: ${ssm:DB_PASSWORD_${upper(${self:provider.stage})}}
-      DB_NAME: ${ssm:DB_NAME_${upper(${self:provider.stage})}}
-      DB_HOST: ${ssm:DB_HOST_${upper(${self:provider.stage})}}
-      DB_PORT: ${ssm:DB_PORT_${upper(${self:provider.stage})}}
-      JWT_SECRET: ${ssm:JWT_SECRET_${upper(${self:provider.stage})}}
-      SECRET_KEY: ${ssm:SECRET_KEY_${upper(${self:provider.stage})}}
-      ADMIN_PHONE: ${ssm:ADMIN_PHONE}
-      ADMIN_EMAIL: ${ssm:ADMIN_EMAIL}
-      IAM_SMTP: ${ssm:IAM_SMTP}
-      SMTP_HOST: ${ssm:SMTP_HOST}
-      SMTP_USER: ${ssm:SMTP_USER}
-      SMTP_PASSWORD: ${ssm:SMTP_PASSWORD}
-      EMAIL_SENDER: ${ssm:EMAIL_SENDER}
-      ACCESS_KEY_ID: ${ssm:ACCESS_KEY_ID}
-      SECRET_ACCESS_KEY: ${ssm:SECRET_ACCESS_KEY}
-      REGION: ${ssm:REGION}
-      GOOGLE_CLIENT_ID: ${ssm:GOOGLE_CLIENT_ID_${upper(${self:provider.stage})}}
-      GOOGLE_CLIENT_SECRET: ${ssm:GOOGLE_CLIENT_SECRET_${upper(${self:provider.stage})}}
-      S3_BUCKET_NAME: ${self:provider.stage}-vyva-files
+      # Auth Configuration
+      JWT_SECRET: ${ssm:/vyva/${self:provider.stage}/VYVA_JWT_SECRET}
+      SECRET_KEY: ${ssm:/vyva/${self:provider.stage}/VYVA_SECRET_KEY}
+
+      # Admin Configuration
+      ADMIN_PHONE: ${ssm:/vyva/${self:provider.stage}/VYVA_ADMIN_PHONE}
+      ADMIN_EMAIL: ${ssm:/vyva/${self:provider.stage}/VYVA_ADMIN_EMAIL}
+
+      # Email/SMTP Configuration
+      IAM_SMTP: ${ssm:/vyva/${self:provider.stage}/VYVA_IAM_SMTP}
+      SMTP_HOST: ${ssm:/vyva/${self:provider.stage}/VYVA_SMTP_HOST}
+      SMTP_USER: ${ssm:/vyva/${self:provider.stage}/VYVA_SMTP_USER}
+      SMTP_PASSWORD: ${ssm:/vyva/${self:provider.stage}/VYVA_SMTP_PASSWORD}
+      EMAIL_SENDER: ${ssm:/vyva/${self:provider.stage}/VYVA_EMAIL_SENDER}
+
+      # AWS Configuration
+      ACCESS_KEY_ID: ${ssm:/vyva/${self:provider.stage}/VYVA_ACCESS_KEY_ID}
+      SECRET_ACCESS_KEY: ${ssm:/vyva/${self:provider.stage}/VYVA_SECRET_ACCESS_KEY}
+      REGION: ${ssm:/vyva/${self:provider.stage}/VYVA_REGION}
+
+      # Google OAuth Configuration
+      GOOGLE_CLIENT_ID: ${ssm:/vyva/${self:provider.stage}/VYVA_GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${ssm:/vyva/${self:provider.stage}/VYVA_GOOGLE_CLIENT_SECRET}
+      GOOGLE_CALENDAR_REDIRECT_URI: ${ssm:/vyva/${self:provider.stage}/VYVA_GOOGLE_CALENDAR_REDIRECT_URI}
+      FRONTEND_URL: ${ssm:/vyva/${self:provider.stage}/VYVA_FRONTEND_URL}
+
+      # S3 Configuration
+      S3_BUCKET_NAME: ${ssm:/vyva/${self:provider.stage}/VYVA_S3_BUCKET_NAME}
 resources:
   Resources:
-    VyvaFilesBucket:
-      Type: AWS::S3::Bucket
-      Properties:
-        BucketName: ${self:provider.stage}-vyva-files
-        PublicAccessBlockConfiguration:
-          BlockPublicAcls: true
-          BlockPublicPolicy: true
-          IgnorePublicAcls: true
-          RestrictPublicBuckets: true
-        CorsConfiguration:
-          CorsRules:
-            - AllowedHeaders:
-                - '*'
-              AllowedMethods:
-                - GET
-                - PUT
-                - POST
-                - DELETE
-              AllowedOrigins:
-                - '*'
-              MaxAge: 3000
+    # Bucket ya existe, comentado para evitar conflictos
+    # VyvaFilesBucket:
+    #   Type: AWS::S3::Bucket
+    #   DeletionPolicy: Retain
+    #   Properties:
+    #     BucketName: ${self:provider.stage}-vyva-files
+    #     PublicAccessBlockConfiguration:
+    #       BlockPublicAcls: true
+    #       BlockPublicPolicy: true
+    #       IgnorePublicAcls: true
+    #       RestrictPublicBuckets: true
+    #     CorsConfiguration:
+    #       CorsRules:
+    #         - AllowedHeaders:
+    #             - '*'
+    #           AllowedMethods:
+    #             - GET
+    #             - PUT
+    #             - POST
+    #             - DELETE
+    #           AllowedOrigins:
+    #             - '*'
+    #           MaxAge: 3000
 plugins:
   - serverless-deployment-bucket
   - serverless-stage-manager
